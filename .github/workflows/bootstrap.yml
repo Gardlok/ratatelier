@@ -1,5 +1,6 @@
 name: Bootstrap Ratatelier source
 
+# This workflow removes itself after reconstructing the checked source archive.
 on:
   push:
     branches: ["agent/ratatelier-workbench"]
