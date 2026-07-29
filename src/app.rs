@@ -8,3 +8,4 @@ include!("app/part_06.rs");
 include!("app/part_07.rs");
 include!("app/part_08.rs");
 include!("app/part_09.rs");
+include!("app/part_10.rs");
