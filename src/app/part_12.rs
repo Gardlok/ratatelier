@@ -48,14 +48,15 @@ impl App {
     }
 
     fn duplicate_animation_frame(&mut self, name: Option<&str>) {
+        let source_name = self.project.frame().name.clone();
+        let duplicate_name = name
+            .filter(|name| !name.trim().is_empty())
+            .map_or_else(|| format!("{source_name} copy"), |name| name.trim().to_owned());
         self.snapshot();
         self.project.duplicate_frame();
-        if let Some(name) = name.filter(|name| !name.trim().is_empty()) {
-            self.project.frame_mut().name = name.trim().to_owned();
-        }
+        self.project.frame_mut().name = duplicate_name.clone();
         self.selection = None;
-        let frame_name = self.project.frame().name.clone();
-        self.mark_dirty(format!("Frame duplicated: {frame_name}"));
+        self.mark_dirty(format!("Frame duplicated: {duplicate_name}"));
     }
 
     fn delete_animation_frame(&mut self) {
@@ -196,13 +197,13 @@ mod frame_management_tests {
     }
 
     #[test]
-    fn duplicate_retains_frame_properties() {
+    fn duplicate_retains_properties_and_derives_name() {
         let mut app = App::new(Project::new("test", 4, 4), None);
         app.rename_active_frame("Opening");
         app.set_active_frame_duration("480");
         app.set_active_frame_state("focused");
-        app.duplicate_animation_frame(Some("Opening hold"));
-        assert_eq!(app.project.frame().name, "Opening hold");
+        app.duplicate_animation_frame(None);
+        assert_eq!(app.project.frame().name, "Opening copy");
         assert_eq!(app.project.frame().duration_ms, 480);
         assert_eq!(
             app.project.frame().widget_state,
