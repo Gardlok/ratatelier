@@ -47,7 +47,7 @@ Inside the editor, `Tab` moves between the artwork and component benches. Press 
 
 ## Clipboard and command line
 
-Selections use the system clipboard without throwing away Ratatelier styling. `y` yanks and `x` cuts the selected rectangle as plain text for other applications while retaining the styled cells internally. Pasting that Ratatelier-owned content back restores its original colors and modifiers.
+Selections use a long-lived system clipboard provider, so copied text remains available to other applications while Ratatelier is running. `y` yanks and `x` cuts the selected rectangle as plain text while retaining the styled cells internally. Pasting that Ratatelier-owned content back restores its original colors and modifiers.
 
 Text copied from another application is pasted with neutral cell styling. It does not inherit the active brush, because clipboard text and brush paint are separate ingredients. Terminal paste events and `Ctrl-v` accept multiline text; unsupported or double-width glyphs are skipped when the canvas mode cannot represent them.
 
