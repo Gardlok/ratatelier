@@ -109,13 +109,19 @@ impl ColorSpec {
 
     #[must_use]
     pub fn next(self) -> Self {
-        let index = Self::PALETTE.iter().position(|color| *color == self).unwrap_or(0);
+        let index = Self::PALETTE
+            .iter()
+            .position(|color| *color == self)
+            .unwrap_or(0);
         Self::PALETTE[(index + 1) % Self::PALETTE.len()]
     }
 
     #[must_use]
     pub fn previous(self) -> Self {
-        let index = Self::PALETTE.iter().position(|color| *color == self).unwrap_or(0);
+        let index = Self::PALETTE
+            .iter()
+            .position(|color| *color == self)
+            .unwrap_or(0);
         Self::PALETTE[(index + Self::PALETTE.len() - 1) % Self::PALETTE.len()]
     }
 }
@@ -500,7 +506,8 @@ impl ComponentScene {
         let offset = (self.widgets.len() as u16 * 2) % 12;
         let rect = RectSpec::new(3 + offset, 3 + offset / 2, 24, 7);
         let index = self.widgets.len();
-        self.widgets.push(WidgetSpec::starter(self.next_id, kind, rect));
+        self.widgets
+            .push(WidgetSpec::starter(self.next_id, kind, rect));
         self.next_id += 1;
         index
     }
@@ -511,8 +518,14 @@ impl ComponentScene {
         };
         widget.rect.width = widget.rect.width.clamp(1, self.width);
         widget.rect.height = widget.rect.height.clamp(1, self.height);
-        widget.rect.x = widget.rect.x.min(self.width.saturating_sub(widget.rect.width));
-        widget.rect.y = widget.rect.y.min(self.height.saturating_sub(widget.rect.height));
+        widget.rect.x = widget
+            .rect
+            .x
+            .min(self.width.saturating_sub(widget.rect.width));
+        widget.rect.y = widget
+            .rect
+            .y
+            .min(self.height.saturating_sub(widget.rect.height));
     }
 }
 
@@ -622,15 +635,9 @@ mod tests {
     #[test]
     fn upper_visible_layer_wins_compositing() {
         let mut canvas = Canvas::new(4, 4);
-        canvas.set_cell(
-            Point::new(1, 1),
-            Cell::painted('a', CellStyle::default()),
-        );
+        canvas.set_cell(Point::new(1, 1), Cell::painted('a', CellStyle::default()));
         canvas.add_layer("Top");
-        canvas.set_cell(
-            Point::new(1, 1),
-            Cell::painted('b', CellStyle::default()),
-        );
+        canvas.set_cell(Point::new(1, 1), Cell::painted('b', CellStyle::default()));
         assert_eq!(canvas.composite_cell(Point::new(1, 1)).unwrap().glyph, "b");
     }
 
@@ -638,10 +645,9 @@ mod tests {
     fn duplicate_frame_is_independent() {
         let mut project = Project::new("test", 4, 4);
         project.duplicate_frame();
-        project.canvas_mut().set_cell(
-            Point::new(0, 0),
-            Cell::painted('x', CellStyle::default()),
-        );
+        project
+            .canvas_mut()
+            .set_cell(Point::new(0, 0), Cell::painted('x', CellStyle::default()));
         assert_ne!(project.frames[0].canvas, project.frames[1].canvas);
     }
 

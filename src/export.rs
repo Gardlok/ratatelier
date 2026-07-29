@@ -14,12 +14,39 @@ pub fn export_art(project: &Project) -> String {
     writeln!(output, "    widgets::Widget,").unwrap();
     writeln!(output, "}};\n").unwrap();
     writeln!(output, "pub struct {}Art;\n", rust_type_name(&project.name)).unwrap();
-    writeln!(output, "impl Widget for {}Art {{", rust_type_name(&project.name)).unwrap();
-    writeln!(output, "    fn render(self, area: Rect, buf: &mut Buffer) {{").unwrap();
-    writeln!(output, "        const WIDTH: u16 = {};", project.canvas().width).unwrap();
-    writeln!(output, "        const HEIGHT: u16 = {};", project.canvas().height).unwrap();
-    writeln!(output, "        let origin_x = area.x + area.width.saturating_sub(WIDTH) / 2;").unwrap();
-    writeln!(output, "        let origin_y = area.y + area.height.saturating_sub(HEIGHT) / 2;").unwrap();
+    writeln!(
+        output,
+        "impl Widget for {}Art {{",
+        rust_type_name(&project.name)
+    )
+    .unwrap();
+    writeln!(
+        output,
+        "    fn render(self, area: Rect, buf: &mut Buffer) {{"
+    )
+    .unwrap();
+    writeln!(
+        output,
+        "        const WIDTH: u16 = {};",
+        project.canvas().width
+    )
+    .unwrap();
+    writeln!(
+        output,
+        "        const HEIGHT: u16 = {};",
+        project.canvas().height
+    )
+    .unwrap();
+    writeln!(
+        output,
+        "        let origin_x = area.x + area.width.saturating_sub(WIDTH) / 2;"
+    )
+    .unwrap();
+    writeln!(
+        output,
+        "        let origin_y = area.y + area.height.saturating_sub(HEIGHT) / 2;"
+    )
+    .unwrap();
 
     for y in 0..project.canvas().height {
         for x in 0..project.canvas().width {
@@ -89,13 +116,29 @@ pub fn export_component(project: &Project) -> String {
     writeln!(output, "    layout::Rect,").unwrap();
     writeln!(output, "    style::{{Color, Modifier, Style}},").unwrap();
     writeln!(output, "    text::Line,").unwrap();
-    writeln!(output, "    widgets::{{Block, Borders, Gauge, List, Paragraph, Sparkline, Widget}},").unwrap();
+    writeln!(
+        output,
+        "    widgets::{{Block, Borders, Gauge, List, Paragraph, Sparkline, Widget}},"
+    )
+    .unwrap();
     writeln!(output, "}};\n").unwrap();
     writeln!(output, "#[derive(Clone, Copy)]").unwrap();
-    writeln!(output, "pub enum ComponentState {{ Normal, Focused, Active, Disabled }}\n").unwrap();
-    writeln!(output, "pub struct {type_name} {{ pub state: ComponentState }}\n").unwrap();
+    writeln!(
+        output,
+        "pub enum ComponentState {{ Normal, Focused, Active, Disabled }}\n"
+    )
+    .unwrap();
+    writeln!(
+        output,
+        "pub struct {type_name} {{ pub state: ComponentState }}\n"
+    )
+    .unwrap();
     writeln!(output, "impl Widget for {type_name} {{").unwrap();
-    writeln!(output, "    fn render(self, area: Rect, buf: &mut Buffer) {{").unwrap();
+    writeln!(
+        output,
+        "    fn render(self, area: Rect, buf: &mut Buffer) {{"
+    )
+    .unwrap();
     writeln!(output, "        let scale = |rect: Rect| -> Rect {{").unwrap();
     writeln!(
         output,
@@ -164,7 +207,12 @@ fn export_widget(output: &mut String, widget: &WidgetSpec) {
         }
         WidgetKind::Sparkline => {
             let data = parse_sparkline(&widget.text);
-            writeln!(output, "        let data_{}: &[u64] = &{data:?};", widget.id).unwrap();
+            writeln!(
+                output,
+                "        let data_{}: &[u64] = &{data:?};",
+                widget.id
+            )
+            .unwrap();
             writeln!(
                 output,
                 "        Sparkline::default().block(Block::default().borders(Borders::ALL).title({:?})).data(data_{}).style({style}).render(area_{}, buf);",

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use ratatelier::{app, storage, App, Project};
+use ratatelier::{App, Project, app, storage};
 
 #[derive(Debug, Parser)]
 #[command(author, version, about)]
