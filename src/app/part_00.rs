@@ -6,8 +6,9 @@ use std::{
 
 use crossterm::{
     event::{
-        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind,
-        KeyModifiers, MouseButton, MouseEvent, MouseEventKind,
+        self, DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste,
+        EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseButton,
+        MouseEvent, MouseEventKind,
     },
     execute,
     terminal::{
@@ -165,6 +166,13 @@ struct Clipboard {
     width: u16,
     height: u16,
     cells: Vec<Cell>,
+    text: String,
+}
+
+#[derive(Debug, Clone)]
+struct CommandCompletion {
+    candidates: Vec<String>,
+    index: usize,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -217,6 +225,7 @@ pub struct App {
     pub brush: Cell,
     pub selection: Option<Selection>,
     pub command: String,
+    pub command_hint: String,
     pub status: String,
     pub dirty: bool,
     pub running: bool,
@@ -230,6 +239,7 @@ pub struct App {
     history: Vec<Project>,
     future: Vec<Project>,
     clipboard: Option<Clipboard>,
+    command_completion: Option<CommandCompletion>,
     shape_drag: Option<ShapeDrag>,
     component_drag: Option<ComponentDrag>,
     pan_drag: Option<PanDrag>,
