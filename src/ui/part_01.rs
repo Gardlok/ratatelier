@@ -31,37 +31,106 @@ fn draw_inspector(frame: &mut Frame<'_>, app: &App) {
 
 fn artwork_inspector(app: &App) -> Vec<Line<'static>> {
     let canvas = app.project.canvas();
-    let layer = &canvas.layers[canvas.active_layer];
-    vec![
+    let frame = app.project.frame();
+    let mut lines = vec![
         labeled("Mode", app.mode.label()),
         labeled("Tool", app.tool.label()),
         labeled("Canvas", format!("{}×{}", canvas.width, canvas.height)),
-        labeled("Glyph mode", canvas.mode.label()),
         labeled("Cursor", format!("{}, {}", app.cursor.x, app.cursor.y)),
+        labeled(
+            "Frame",
+            format!(
+                "{} ({}/{})",
+                frame.name,
+                app.project.active_frame + 1,
+                app.project.frames.len()
+            ),
+        ),
+        labeled("Duration", format!("{} ms", frame.duration_ms)),
+        labeled("State", frame.widget_state.label()),
+        Line::from(""),
         labeled("Brush", format!("[{}]", app.brush.glyph)),
         labeled("Foreground", app.brush.style.fg.label()),
         labeled("Background", app.brush.style.bg.label()),
-        labeled("Layer", format!("{} ({}/{})", layer.name, canvas.active_layer + 1, canvas.layers.len())),
         Line::from(""),
-        Line::styled("Helix-like controls", Style::default().fg(Color::DarkGray)),
-        Line::from("h j k l   move"),
-        Line::from("d/e/i/v   mode"),
-        Line::from("1..5      tools"),
-        Line::from("Space     apply"),
-        Line::from("[ ]       glyph"),
-        Line::from("c/C/b     style"),
-        Line::from("n/N/X     frames"),
-        Line::from("p/s       play/state"),
-        Line::from(":         command"),
-    ]
+        Line::styled("Layers · top to bottom", Style::default().fg(Color::DarkGray)),
+    ];
+    lines.extend(layer_stack_lines(app, 7));
+    lines.extend([
+        Line::from(""),
+        Line::styled("Composition controls", Style::default().fg(Color::DarkGray)),
+        Line::from("PgUp/PgDn  layer"),
+        Line::from("V/D         vis/duplicate"),
+        Line::from("a/A         add/delete"),
+        Line::from(",/.         frame select"),
+        Line::from("</>         frame reorder"),
+        Line::from("+/-         duration"),
+        Line::from(":frame …    properties"),
+        Line::from(":layer …    management"),
+    ]);
+    lines
+}
+
+fn layer_stack_lines(app: &App, capacity: usize) -> Vec<Line<'static>> {
+    let canvas = app.project.canvas();
+    let total = canvas.layers.len();
+    let capacity = capacity.max(1).min(total);
+    let half = capacity / 2;
+    let mut start = canvas.active_layer.saturating_sub(half);
+    let end = (start + capacity).min(total);
+    start = end.saturating_sub(capacity);
+
+    let mut lines = Vec::new();
+    if end < total {
+        lines.push(Line::styled(
+            "  … higher layers",
+            Style::default().fg(Color::DarkGray),
+        ));
+    }
+    for index in (start..end).rev() {
+        let layer = &canvas.layers[index];
+        let active = if index == canvas.active_layer { ">" } else { " " };
+        let visible = if layer.visible { "[x]" } else { "[ ]" };
+        let style = if index == canvas.active_layer {
+            Style::default()
+                .fg(Color::LightCyan)
+                .add_modifier(Modifier::BOLD)
+        } else if layer.visible {
+            Style::default().fg(Color::Gray)
+        } else {
+            Style::default().fg(Color::DarkGray)
+        };
+        lines.push(Line::styled(
+            format!("{active} {visible} {:>2} {}", index + 1, layer.name),
+            style,
+        ));
+    }
+    if start > 0 {
+        lines.push(Line::styled(
+            "  … lower layers",
+            Style::default().fg(Color::DarkGray),
+        ));
+    }
+    lines
 }
 
 fn component_inspector(app: &App) -> Vec<Line<'static>> {
     let scene = &app.project.components;
+    let frame = app.project.frame();
     let mut lines = vec![
         labeled("Mode", app.mode.label()),
         labeled("Surface", format!("{}×{}", scene.width, scene.height)),
-        labeled("State", app.project.frame().widget_state.label()),
+        labeled(
+            "Frame",
+            format!(
+                "{} ({}/{})",
+                frame.name,
+                app.project.active_frame + 1,
+                app.project.frames.len()
+            ),
+        ),
+        labeled("Duration", format!("{} ms", frame.duration_ms)),
+        labeled("State", frame.widget_state.label()),
         labeled("Widgets", scene.widgets.len().to_string()),
     ];
     if let Some(widget) = scene.widgets.get(app.component_selected) {
@@ -86,6 +155,9 @@ fn component_inspector(app: &App) -> Vec<Line<'static>> {
         Line::from("[ ]       select"),
         Line::from("a/x/t     add/del/type"),
         Line::from("c/s       color/state"),
+        Line::from(",/.       frame select"),
+        Line::from("</>       frame reorder"),
+        Line::from("+/-       duration"),
         Line::from("LMB drag  move"),
         Line::from("RMB drag  resize"),
         Line::from(":title …  title"),
