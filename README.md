@@ -47,7 +47,7 @@ Inside the editor, `Tab` moves between the artwork and component benches. Press 
 
 ## Clipboard and command line
 
-Selections use the system clipboard without throwing away Ratatelier styling. `y` yanks and `x` cuts the selected rectangle as plain text for other applications while retaining the styled cells internally. Pasting the same content back restores those styles. Text copied elsewhere is painted onto the canvas with the current brush style.
+Selections use the system clipboard without throwing away Ratatelier styling. `Ctrl-a` selects the full canvas, `y` yanks, and `x` cuts the selected rectangle as plain text for other applications while retaining the styled cells internally. Pasting the same content back restores those styles. Text copied elsewhere is painted onto the canvas with the current brush style.
 
 Terminal paste events and `Ctrl-v` accept multiline external text. Unsupported or double-width glyphs are skipped when the canvas mode cannot represent them.
 
@@ -76,6 +76,7 @@ The live Rust pane can be opened or tucked away from the right-side tool rail. C
 | `Shift-Tab` | Previous command completion |
 | `h j k l` | Move cursor, widget, or focused export pane |
 | `d` / `e` / `i` / `v` | Draw / erase / insert / select mode |
+| `Ctrl-a` | Select the entire artwork canvas |
 | `y` / `x` / `p` | Yank / cut / paste selected cells through the system clipboard |
 | `Ctrl-c` / `Ctrl-v` | Copy selection / paste external clipboard text |
 | `1`..`5` | Pencil / eraser / line / rectangle / fill |
