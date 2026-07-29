@@ -1,12 +1,12 @@
-use std::cell::Cell;
+use std::cell::Cell as LocalCell;
 
 thread_local! {
-    static HELP_SCROLL: Cell<u16> = const { Cell::new(0) };
+    static HELP_SCROLL: LocalCell<u16> = const { LocalCell::new(0) };
 }
 
 impl App {
     pub(crate) fn help_scroll(&self) -> u16 {
-        HELP_SCROLL.with(Cell::get)
+        HELP_SCROLL.with(LocalCell::get)
     }
 
     fn set_help_scroll(&self, value: u16) {
@@ -20,8 +20,8 @@ impl App {
     fn scroll_help(&self, delta: i32) {
         let maximum = ui::help_scroll_limit(self, self.regions.help);
         let current = i32::from(self.help_scroll().min(maximum));
-        let next = (current + delta).clamp(0, i32::from(maximum)) as u16;
-        self.set_help_scroll(next);
+        let next = (current + delta).clamp(0, i32::from(maximum));
+        self.set_help_scroll(u16::try_from(next).unwrap_or(maximum));
     }
 
     fn handle_help_key(&mut self, key: KeyEvent) {
