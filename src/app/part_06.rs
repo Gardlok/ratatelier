@@ -18,7 +18,8 @@ impl App {
             }
         }
         let text = cells_to_text(bounds.width, bounds.height, &cells);
-        let system_error = cli_clipboard::set_contents(text.clone())
+        let system_error = self
+            .write_system_clipboard(text.clone())
             .err()
             .map(|error| error.to_string());
         self.clipboard = Some(Clipboard {
