@@ -1,6 +1,10 @@
 impl App {
     fn handle_mouse(&mut self, mouse: MouseEvent) {
-        if self.show_help || self.mode == Mode::Command {
+        if self.show_help {
+            self.handle_help_mouse(mouse);
+            return;
+        }
+        if self.mode == Mode::Command {
             return;
         }
 
