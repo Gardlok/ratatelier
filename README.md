@@ -79,6 +79,7 @@ ratatelier artwork.ron
 | `p` / `s` | Playback / cycle widget state |
 | `u` / `Ctrl-r` | Undo / redo |
 | `Ctrl-s` | Save |
+| `Ctrl-x` | Quit, prompting when unsaved changes exist |
 | `:` | Command mode |
 | `?` or `F1` | In-app help |
 
