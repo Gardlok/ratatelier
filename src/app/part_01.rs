@@ -83,7 +83,7 @@ impl App {
     fn handle_key(&mut self, key: KeyEvent) {
         if key.modifiers.contains(KeyModifiers::CONTROL) {
             match key.code {
-                KeyCode::Char('q') => {
+                KeyCode::Char('x') => {
                     self.request_quit(false);
                     return;
                 }
@@ -144,5 +144,4 @@ impl App {
             Workspace::Components => self.handle_component_key(key),
         }
     }
-
 }
