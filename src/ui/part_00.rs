@@ -144,6 +144,6 @@ pub fn draw(frame: &mut Frame<'_>, app: &App) {
     draw_timeline(frame, app);
     draw_footer(frame, app);
     if app.show_help {
-        draw_help(frame, app);
+        draw_scrollable_help(frame, app);
     }
 }
