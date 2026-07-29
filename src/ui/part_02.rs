@@ -289,7 +289,9 @@ fn draw_help(frame: &mut Frame<'_>, app: &App) {
         Line::styled("Artwork", Style::default().fg(Color::LightGreen)),
         Line::from("h/j/k/l move · d draw · e erase · i insert · v select · u undo · Ctrl-R redo"),
         Line::from("1 pencil · 2 eraser · 3 line · 4 rectangle · 5 fill · Space apply/anchor"),
-        Line::from("Selection: y/Ctrl-C yank · x cut · p/P/Ctrl-V paste through system clipboard"),
+        Line::from(
+            "Selection: Ctrl-A all · y/Ctrl-C yank · x cut · p/P/Ctrl-V paste through system clipboard",
+        ),
         Line::from("Terminal paste accepts multiline external text · unsupported glyphs are skipped"),
         Line::from("Mouse: left places/paints · drag selected cells to move · right drag pans"),
         Line::from("Right click without dragging picks a glyph · wheel cycles glyphs"),
