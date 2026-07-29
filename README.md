@@ -50,7 +50,7 @@ Inside the editor, `Tab` moves between the artwork and component benches. Press 
 
 Every animation frame owns a stack of artwork layers. Think of them as transparent sheets laid over one another: the bottom layer might hold a background, the next a subject, and the top layer highlights or effects. Painting and erasing change only the active layer, while the canvas displays the visible stack composited from top to bottom.
 
-The inspector shows the layer stack with its active and visibility state:
+The inspector title and summary always show the active layer index, name, and visibility. When space permits, the inspector also shows the surrounding layer stack:
 
 ```text
   [x]  3 Highlights
@@ -142,7 +142,7 @@ The live Rust pane can be opened or tucked away from the right-side tool rail. C
 | `Ctrl-s` | Save |
 | `Ctrl-x` | Quit, warning about unsaved work |
 | `:` | Command mode |
-| `?` or `F1` | Help |
+| `?` or `F1` | Open help; scroll with arrows, `j/k`, `PgUp/PgDn`, `g/G`, or the wheel |
 
 When the live export pane is focused, use `j/k`, the arrow keys, the mouse wheel, `PgUp/PgDn`, or `g/G`. Horizontal scrolling uses `h/l` or the left/right arrows. `Esc` returns focus to the editor.
 
