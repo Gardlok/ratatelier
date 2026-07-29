@@ -93,6 +93,11 @@ impl App {
     }
 
     fn handle_key(&mut self, key: KeyEvent) {
+        if self.show_help {
+            self.handle_help_key(key);
+            return;
+        }
+
         if key.modifiers.contains(KeyModifiers::CONTROL) {
             match key.code {
                 KeyCode::Char('x') => {
@@ -114,7 +119,6 @@ impl App {
                 KeyCode::Char('a') => {
                     if self.workspace == Workspace::Artwork
                         && self.mode != Mode::Command
-                        && !self.show_help
                         && !self.export_focused
                     {
                         self.select_all();
@@ -144,13 +148,6 @@ impl App {
             return;
         }
 
-        if self.show_help {
-            if matches!(key.code, KeyCode::Esc | KeyCode::Char('?') | KeyCode::F(1)) {
-                self.show_help = false;
-            }
-            return;
-        }
-
         if self.export_focused && self.handle_export_key(key) {
             return;
         }
@@ -162,6 +159,7 @@ impl App {
 
         match key.code {
             KeyCode::F(1) | KeyCode::Char('?') => {
+                self.reset_help_scroll();
                 self.show_help = true;
                 return;
             }
