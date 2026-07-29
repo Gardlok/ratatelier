@@ -32,6 +32,7 @@ impl App {
             history: Vec::new(),
             future: Vec::new(),
             clipboard: None,
+            system_clipboard: None,
             command_completion: None,
             shape_drag: None,
             component_drag: None,
