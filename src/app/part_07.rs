@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn canvas_click_places_cursor_without_recentering_viewport() {
-        let mut app = App::new(Project::new("test", 100, 40), None);
+        let mut app = App::new(Project::new("test", 100, 100), None);
         app.viewport_origin = Point::new(10, 4);
         app.regions = ui::calculate_regions(Rect::new(0, 0, 160, 50), &app);
         let column = app.regions.canvas_inner.x + 5;
@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn right_drag_pans_canvas_without_moving_cursor() {
-        let mut app = App::new(Project::new("test", 100, 40), None);
+        let mut app = App::new(Project::new("test", 100, 100), None);
         app.cursor = Point::new(20, 10);
         app.viewport_origin = Point::new(10, 4);
         app.regions = ui::calculate_regions(Rect::new(0, 0, 160, 50), &app);
