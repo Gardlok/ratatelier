@@ -94,4 +94,24 @@ mod tests {
     fn file_stem_is_shell_friendly() {
         assert_eq!(safe_file_stem("My Great Logo!"), "my-great-logo");
     }
+
+    #[test]
+    fn ctrl_x_requests_quit() {
+        let mut app = App::new(Project::new("test", 4, 4), None);
+        app.handle_event(Event::Key(KeyEvent::new(
+            KeyCode::Char('x'),
+            KeyModifiers::CONTROL,
+        )));
+        assert!(!app.running);
+    }
+
+    #[test]
+    fn ctrl_q_does_not_request_quit() {
+        let mut app = App::new(Project::new("test", 4, 4), None);
+        app.handle_event(Event::Key(KeyEvent::new(
+            KeyCode::Char('q'),
+            KeyModifiers::CONTROL,
+        )));
+        assert!(app.running);
+    }
 }
