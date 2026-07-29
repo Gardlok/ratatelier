@@ -292,6 +292,7 @@ fn draw_help(frame: &mut Frame<'_>, app: &App) {
         Line::from(
             "Selection: Ctrl-A all · y/Ctrl-C yank · x cut · p/P/Ctrl-V paste through system clipboard",
         ),
+        Line::from("Ratatelier yanks retain styles · external text pastes with neutral styling"),
         Line::from("Terminal paste accepts multiline external text · unsupported glyphs are skipped"),
         Line::from("Mouse: left places/paints · drag selected cells to move · right drag pans"),
         Line::from("Right click without dragging picks a glyph · wheel cycles glyphs"),
