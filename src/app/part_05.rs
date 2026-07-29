@@ -21,7 +21,10 @@ impl App {
                 self.project = project;
                 self.current_path = Some(path.to_path_buf());
                 self.cursor = Point::default();
+                self.viewport_origin = Point::default();
                 self.component_selected = 0;
+                self.export_scroll = Point::default();
+                self.export_selection = None;
                 self.dirty = false;
                 self.status = format!("Opened {}", path.display());
             }
@@ -31,7 +34,7 @@ impl App {
 
     fn request_quit(&mut self, force: bool) {
         if self.dirty && !force {
-            self.status = "Unsaved changes. Use :w, :wq, or :q!".to_owned();
+            self.status = "Unsaved changes. Use :w, :wq, or :q!.".to_owned();
         } else {
             self.running = false;
         }
@@ -89,7 +92,12 @@ impl App {
         let old = self.cursor;
         self.cursor.x = add_signed(self.cursor.x, dx).min(self.project.canvas().width - 1);
         self.cursor.y = add_signed(self.cursor.y, dy).min(self.project.canvas().height - 1);
-        self.cursor != old
+        if self.cursor != old {
+            self.ensure_cursor_visible();
+            true
+        } else {
+            false
+        }
     }
 
     fn apply_tool_at_cursor(&mut self) {
@@ -196,5 +204,4 @@ impl App {
             );
         }
     }
-
 }
