@@ -21,8 +21,17 @@ Think of it as mise en place for a TUI: shape, color, timing, and component stat
 
 ## Start working
 
+Clone the repository and install the local package:
+
 ```bash
+git clone https://github.com/Gardlok/ratatelier.git
+cd ratatelier
 cargo install --path .
+```
+
+Start a new project:
+
+```bash
 ratatelier --width 64 --height 20
 ```
 
