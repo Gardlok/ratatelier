@@ -61,16 +61,102 @@ fn draw_components(frame: &mut Frame<'_>, app: &App) {
 }
 
 fn draw_code(frame: &mut Frame<'_>, app: &App) {
-    let source = match app.workspace {
-        Workspace::Artwork => export::export_art(&app.project),
-        Workspace::Components => export::export_component(&app.project),
+    let source = app.live_export_source();
+    let border_style = if app.export_focused {
+        Style::default()
+            .fg(Color::LightCyan)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        Style::default().fg(Color::DarkGray)
+    };
+    let title = if app.export_focused {
+        " Live Rust export · focused "
+    } else {
+        " Live Rust export "
     };
     frame.render_widget(
-        Paragraph::new(source)
-            .block(Block::default().borders(Borders::ALL).title(" Live Rust export "))
+        Paragraph::new(export_lines(&source, app.export_selection))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(title)
+                    .border_style(border_style),
+            )
             .style(Style::default().fg(Color::Gray))
-            .wrap(Wrap { trim: false }),
+            .scroll((app.export_scroll.y, app.export_scroll.x)),
         app.regions.code,
+    );
+}
+
+fn export_lines(source: &str, selection: Option<TextSelection>) -> Vec<Line<'static>> {
+    source
+        .lines()
+        .enumerate()
+        .map(|(line_index, text)| export_line(line_index, text, selection))
+        .collect()
+}
+
+fn export_line(
+    line_index: usize,
+    text: &str,
+    selection: Option<TextSelection>,
+) -> Line<'static> {
+    let Some(selection) = selection else {
+        return Line::from(text.to_owned());
+    };
+    let (start, end) = selection.ordered();
+    if line_index < start.line || line_index > end.line {
+        return Line::from(text.to_owned());
+    }
+
+    let characters: Vec<char> = text.chars().collect();
+    let start_column = if line_index == start.line {
+        start.column.min(characters.len())
+    } else {
+        0
+    };
+    let end_column = if line_index == end.line {
+        end.column.saturating_add(1).min(characters.len())
+    } else {
+        characters.len()
+    };
+    if start_column >= end_column {
+        return Line::from(text.to_owned());
+    }
+
+    let before: String = characters[..start_column].iter().collect();
+    let selected: String = characters[start_column..end_column].iter().collect();
+    let after: String = characters[end_column..].iter().collect();
+    Line::from(vec![
+        Span::raw(before),
+        Span::styled(
+            selected,
+            Style::default().fg(Color::Black).bg(Color::LightCyan),
+        ),
+        Span::raw(after),
+    ])
+}
+
+fn draw_toolbar(frame: &mut Frame<'_>, app: &App) {
+    let state = if app.show_export { "OPEN" } else { "closed" };
+    let style = if app.show_export {
+        Style::default().fg(Color::LightCyan)
+    } else {
+        Style::default().fg(Color::DarkGray)
+    };
+    let lines = vec![
+        Line::from(""),
+        Line::styled(" [F2] ", style.add_modifier(Modifier::BOLD)),
+        Line::styled(" Rust ", style),
+        Line::styled(format!(" {state} "), style),
+        Line::from(""),
+        Line::styled(" click ", Style::default().fg(Color::DarkGray)),
+    ];
+    frame.render_widget(
+        Paragraph::new(lines)
+            .alignment(Alignment::Center)
+            .block(Block::default().borders(Borders::ALL).title(" Tools ")),
+        app.regions.toolbar,
     );
 }
 
@@ -122,14 +208,14 @@ fn draw_footer(frame: &mut Frame<'_>, app: &App) {
             ),
             Span::raw(" "),
             Span::styled(app.status.as_str(), Style::default().fg(Color::Gray)),
-            Span::raw("  │  Tab workspace  ? help  Ctrl-S save  Ctrl-X quit"),
+            Span::raw("  │  Tab workspace  F2 export  ? help  Ctrl-S save  Ctrl-X quit"),
         ])
     };
     frame.render_widget(Paragraph::new(content), app.regions.footer);
 }
 
 fn draw_help(frame: &mut Frame<'_>, app: &App) {
-    let area = centered_rect(76, 80, frame.area());
+    let area = centered_rect(78, 84, frame.area());
     frame.render_widget(Clear, area);
     let help = vec![
         Line::styled(
@@ -139,12 +225,15 @@ fn draw_help(frame: &mut Frame<'_>, app: &App) {
                 .add_modifier(Modifier::BOLD),
         ),
         Line::from(""),
-        Line::from("Global: Tab workspace · Ctrl-S save · Ctrl-X quit · : command · ? close help"),
+        Line::from(
+            "Global: Tab workspace · F2/Ctrl-E export · Ctrl-S save · Ctrl-X quit · : command",
+        ),
         Line::from(""),
         Line::styled("Artwork", Style::default().fg(Color::LightGreen)),
         Line::from("h/j/k/l move · d draw · e erase · i insert · v select · u undo · Ctrl-R redo"),
         Line::from("1 pencil · 2 eraser · 3 line · 4 rectangle · 5 fill · Space apply/anchor"),
-        Line::from("Mouse: left paints/drags shapes · right picks · wheel cycles glyphs"),
+        Line::from("Mouse: left places/paints · drag selected cells to move · right drag pans"),
+        Line::from("Right click without dragging picks a glyph · wheel cycles glyphs"),
         Line::from("n add frame · N duplicate · X delete · ,/. switch · p playback · s widget state"),
         Line::from("a add layer · A delete layer · m ASCII/Unicode · c/C colors · b bold"),
         Line::from(""),
@@ -152,6 +241,10 @@ fn draw_help(frame: &mut Frame<'_>, app: &App) {
         Line::from("h/j/k/l move · H/J/K/L resize · [/] select · a add · x delete · t type"),
         Line::from("Left drag moves · right drag resizes · c changes current-state color"),
         Line::from(":title TITLE · :text TEXT · :value 0..100 · :widget add KIND"),
+        Line::from(""),
+        Line::styled("Live export", Style::default().fg(Color::LightGreen)),
+        Line::from("F2 or tool rail toggles · click to focus · drag to select · right click clears"),
+        Line::from("Mouse wheel or j/k scroll · h/l horizontal · PgUp/PgDn · g/G top/bottom"),
         Line::from(""),
         Line::styled("Files and export", Style::default().fg(Color::LightGreen)),
         Line::from(":w [path] · :open path · :new 48x18 · :resize 80x24 · :scene 80x24"),
