@@ -47,9 +47,9 @@ Inside the editor, `Tab` moves between the artwork and component benches. Press 
 
 ## Clipboard and command line
 
-Selections use the system clipboard without throwing away Ratatelier styling. `Ctrl-a` selects the full canvas, `y` yanks, and `x` cuts the selected rectangle as plain text for other applications while retaining the styled cells internally. Pasting the same content back restores those styles. Text copied elsewhere is painted onto the canvas with the current brush style.
+Selections use the system clipboard without throwing away Ratatelier styling. `y` yanks and `x` cuts the selected rectangle as plain text for other applications while retaining the styled cells internally. Pasting that Ratatelier-owned content back restores its original colors and modifiers.
 
-Terminal paste events and `Ctrl-v` accept multiline external text. Unsupported or double-width glyphs are skipped when the canvas mode cannot represent them.
+Text copied from another application is pasted with neutral cell styling. It does not inherit the active brush, because clipboard text and brush paint are separate ingredients. Terminal paste events and `Ctrl-v` accept multiline text; unsupported or double-width glyphs are skipped when the canvas mode cannot represent them.
 
 In command mode, `Tab` and `Shift-Tab` cycle matching commands, subcommands, directories, and files. Path completion lists directories first and keeps walking as `/` is added.
 
