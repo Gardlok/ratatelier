@@ -1,0 +1,33 @@
+[package]
+name = "ratatelier"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "A terminal atelier for glyph art, Ratatui components, and animation"
+license = "MIT"
+repository = "https://github.com/Gardlok/ratatelier"
+readme = "README.md"
+keywords = ["ratatui", "tui", "ascii-art", "animation", "terminal"]
+categories = ["command-line-utilities", "graphics", "development-tools"]
+
+[dependencies]
+clap = { version = "4.6.4", features = ["derive"] }
+crossterm = "0.29.0"
+ratatui = "0.30.2"
+ron = "0.12.2"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"
+unicode-width = "0.2.2"
+
+[dev-dependencies]
+
+[profile.release]
+lto = "thin"
+strip = true
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"

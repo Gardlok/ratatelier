@@ -1,0 +1,8 @@
+include!("app/part_00.rs");
+include!("app/part_01.rs");
+include!("app/part_02.rs");
+include!("app/part_03.rs");
+include!("app/part_04.rs");
+include!("app/part_05.rs");
+include!("app/part_06.rs");
+include!("app/part_07.rs");
