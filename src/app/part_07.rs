@@ -83,6 +83,15 @@ fn safe_file_stem(name: &str) -> String {
 mod tests {
     use super::*;
 
+    fn mouse(kind: MouseEventKind, column: u16, row: u16) -> Event {
+        Event::Mouse(MouseEvent {
+            kind,
+            column,
+            row,
+            modifiers: KeyModifiers::NONE,
+        })
+    }
+
     #[test]
     fn parses_common_dimensions() {
         assert_eq!(parse_dimensions("80x24"), Some((80, 24)));
@@ -113,5 +122,47 @@ mod tests {
             KeyModifiers::CONTROL,
         )));
         assert!(app.running);
+    }
+
+    #[test]
+    fn canvas_click_places_cursor_without_recentering_viewport() {
+        let mut app = App::new(Project::new("test", 100, 100), None);
+        app.viewport_origin = Point::new(10, 4);
+        app.regions = ui::calculate_regions(Rect::new(0, 0, 160, 50), &app);
+        let column = app.regions.canvas_inner.x + 5;
+        let row = app.regions.canvas_inner.y + 3;
+
+        app.handle_event(mouse(
+            MouseEventKind::Down(MouseButton::Left),
+            column,
+            row,
+        ));
+
+        assert_eq!(app.cursor, Point::new(15, 7));
+        assert_eq!(app.viewport_origin, Point::new(10, 4));
+    }
+
+    #[test]
+    fn right_drag_pans_canvas_without_moving_cursor() {
+        let mut app = App::new(Project::new("test", 100, 100), None);
+        app.cursor = Point::new(20, 10);
+        app.viewport_origin = Point::new(10, 4);
+        app.regions = ui::calculate_regions(Rect::new(0, 0, 160, 50), &app);
+        let column = app.regions.canvas_inner.x + 10;
+        let row = app.regions.canvas_inner.y + 5;
+
+        app.handle_event(mouse(
+            MouseEventKind::Down(MouseButton::Right),
+            column,
+            row,
+        ));
+        app.handle_event(mouse(
+            MouseEventKind::Drag(MouseButton::Right),
+            column + 3,
+            row + 2,
+        ));
+
+        assert_eq!(app.viewport_origin, Point::new(7, 2));
+        assert_eq!(app.cursor, Point::new(20, 10));
     }
 }

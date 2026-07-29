@@ -114,12 +114,33 @@ mod tests {
 
     #[test]
     fn canvas_mapping_accounts_for_viewport_origin() {
-        let app = App::new(Project::new("test", 100, 40), None);
-        let regions = calculate_regions(Rect::new(0, 0, 120, 40), &app);
+        let mut app = App::new(Project::new("test", 100, 40), None);
+        app.viewport_origin = Point::new(12, 7);
+        let regions = calculate_regions(Rect::new(0, 0, 140, 40), &app);
         let point = regions
             .canvas_point(regions.canvas_inner.x, regions.canvas_inner.y)
             .unwrap();
-        assert_eq!(point, regions.viewport_origin);
+        assert_eq!(point, Point::new(12, 7));
+    }
+
+    #[test]
+    fn viewport_does_not_recenter_when_cursor_moves() {
+        let mut app = App::new(Project::new("test", 100, 40), None);
+        app.viewport_origin = Point::new(8, 5);
+        app.cursor = Point::new(80, 30);
+        let regions = calculate_regions(Rect::new(0, 0, 140, 40), &app);
+        assert_eq!(regions.viewport_origin, Point::new(8, 5));
+    }
+
+    #[test]
+    fn hiding_export_gives_workspace_more_room() {
+        let mut app = App::new(Project::new("test", 100, 40), None);
+        let shown = calculate_regions(Rect::new(0, 0, 140, 40), &app);
+        app.show_export = false;
+        let hidden = calculate_regions(Rect::new(0, 0, 140, 40), &app);
+        assert!(hidden.workspace.width > shown.workspace.width);
+        assert_eq!(hidden.code.width, 0);
+        assert!(hidden.toolbar.width > 0);
     }
 
     #[test]
@@ -134,5 +155,19 @@ mod tests {
             .unwrap();
         assert!(point.x < app.project.components.width);
         assert!(point.y < app.project.components.height);
+    }
+
+    #[test]
+    fn export_selection_highlights_requested_characters() {
+        let line = export_line(
+            0,
+            "abcdef",
+            Some(TextSelection {
+                anchor: crate::app::TextPoint { line: 0, column: 1 },
+                head: crate::app::TextPoint { line: 0, column: 3 },
+            }),
+        );
+        assert_eq!(line.spans.len(), 3);
+        assert_eq!(line.spans[1].content.as_ref(), "bcd");
     }
 }

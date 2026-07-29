@@ -21,6 +21,7 @@ impl App {
                 }
             }
             "e" | "export" => self.export_command(rest),
+            "panel" | "tools" => self.toggle_export_panel(),
             "new" => self.new_command(rest),
             "resize" => self.resize_command(rest),
             "name" => {
@@ -100,7 +101,11 @@ impl App {
         self.project = Project::new("Untitled", width, height);
         self.current_path = None;
         self.cursor = Point::default();
+        self.viewport_origin = Point::default();
+        self.selection = None;
         self.component_selected = 0;
+        self.export_scroll = Point::default();
+        self.export_selection = None;
         self.mark_dirty("New project created");
     }
 
@@ -112,6 +117,7 @@ impl App {
         self.snapshot();
         self.project.resize_all_frames(width, height);
         self.clamp_cursor();
+        self.clamp_viewport();
         self.mark_dirty("All animation frames resized");
     }
 
@@ -252,5 +258,4 @@ impl App {
             self.discard_snapshot();
         }
     }
-
 }

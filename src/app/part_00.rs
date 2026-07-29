@@ -14,7 +14,7 @@ use crossterm::{
         disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
     },
 };
-use ratatui::{backend::CrosstermBackend, Terminal};
+use ratatui::{backend::CrosstermBackend, layout::Rect, Terminal};
 
 use crate::{
     export,
@@ -137,6 +137,29 @@ impl Selection {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
+pub struct TextPoint {
+    pub line: usize,
+    pub column: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TextSelection {
+    pub anchor: TextPoint,
+    pub head: TextPoint,
+}
+
+impl TextSelection {
+    #[must_use]
+    pub fn ordered(self) -> (TextPoint, TextPoint) {
+        if self.anchor <= self.head {
+            (self.anchor, self.head)
+        } else {
+            (self.head, self.anchor)
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct Clipboard {
     width: u16,
@@ -158,6 +181,30 @@ struct ComponentDrag {
     resizing: bool,
 }
 
+#[derive(Debug, Clone, Copy)]
+struct PanDrag {
+    start_column: u16,
+    start_row: u16,
+    origin: Point,
+    moved: bool,
+}
+
+#[derive(Debug, Clone)]
+enum SelectionDragKind {
+    Create,
+    Move {
+        original: Selection,
+        cells: Vec<Cell>,
+    },
+}
+
+#[derive(Debug, Clone)]
+struct SelectionDrag {
+    start: Point,
+    current: Point,
+    kind: SelectionDragKind,
+}
+
 #[derive(Debug)]
 pub struct App {
     pub project: Project,
@@ -166,6 +213,7 @@ pub struct App {
     pub mode: Mode,
     pub tool: Tool,
     pub cursor: Point,
+    pub viewport_origin: Point,
     pub brush: Cell,
     pub selection: Option<Selection>,
     pub command: String,
@@ -173,6 +221,10 @@ pub struct App {
     pub dirty: bool,
     pub running: bool,
     pub show_help: bool,
+    pub show_export: bool,
+    pub export_focused: bool,
+    pub export_scroll: Point,
+    pub export_selection: Option<TextSelection>,
     pub component_selected: usize,
     pub regions: UiRegions,
     history: Vec<Project>,
@@ -180,6 +232,9 @@ pub struct App {
     clipboard: Option<Clipboard>,
     shape_drag: Option<ShapeDrag>,
     component_drag: Option<ComponentDrag>,
+    pan_drag: Option<PanDrag>,
+    selection_drag: Option<SelectionDrag>,
+    export_drag_anchor: Option<TextPoint>,
     playing: bool,
     last_tick: Instant,
     elapsed_in_frame: Duration,

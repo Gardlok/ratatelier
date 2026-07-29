@@ -8,6 +8,7 @@ impl App {
             mode: Mode::Normal,
             tool: Tool::Pencil,
             cursor: Point::default(),
+            viewport_origin: Point::default(),
             brush: Cell::painted(
                 '#',
                 CellStyle {
@@ -21,6 +22,10 @@ impl App {
             dirty: false,
             running: true,
             show_help: false,
+            show_export: true,
+            export_focused: false,
+            export_scroll: Point::default(),
+            export_selection: None,
             component_selected: 0,
             regions: UiRegions::default(),
             history: Vec::new(),
@@ -28,6 +33,9 @@ impl App {
             clipboard: None,
             shape_drag: None,
             component_drag: None,
+            pan_drag: None,
+            selection_drag: None,
+            export_drag_anchor: None,
             playing: false,
             last_tick: Instant::now(),
             elapsed_in_frame: Duration::ZERO,
@@ -95,14 +103,27 @@ impl App {
                     self.redo();
                     return;
                 }
+                KeyCode::Char('e') => {
+                    self.toggle_export_panel();
+                    return;
+                }
                 _ => {}
             }
+        }
+
+        if key.code == KeyCode::F(2) {
+            self.toggle_export_panel();
+            return;
         }
 
         if self.show_help {
             if matches!(key.code, KeyCode::Esc | KeyCode::Char('?') | KeyCode::F(1)) {
                 self.show_help = false;
             }
+            return;
+        }
+
+        if self.export_focused && self.handle_export_key(key) {
             return;
         }
 
@@ -121,18 +142,25 @@ impl App {
                 self.mode = Mode::Normal;
                 self.selection = None;
                 self.shape_drag = None;
+                self.export_scroll = Point::default();
+                self.export_selection = None;
+                self.export_focused = false;
                 self.status = format!("{} workspace", self.workspace.label());
                 return;
             }
             KeyCode::Char(':') => {
                 self.mode = Mode::Command;
                 self.command.clear();
+                self.export_focused = false;
                 return;
             }
             KeyCode::Esc => {
                 self.mode = Mode::Normal;
                 self.selection = None;
                 self.shape_drag = None;
+                self.selection_drag = None;
+                self.pan_drag = None;
+                self.export_focused = false;
                 self.status = "Normal mode".to_owned();
                 return;
             }
