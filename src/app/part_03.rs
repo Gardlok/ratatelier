@@ -4,6 +4,22 @@ impl App {
             return;
         }
 
+        if matches!(mouse.kind, MouseEventKind::Down(MouseButton::Left))
+            && region_contains(self.regions.toolbar, mouse.column, mouse.row)
+        {
+            self.toggle_export_panel();
+            return;
+        }
+
+        if self.show_export && region_contains(self.regions.code, mouse.column, mouse.row) {
+            self.handle_export_mouse(mouse);
+            return;
+        }
+
+        if matches!(mouse.kind, MouseEventKind::Down(MouseButton::Left)) {
+            self.export_focused = false;
+        }
+
         match self.workspace {
             Workspace::Artwork => self.handle_art_mouse(mouse),
             Workspace::Components => self.handle_component_mouse(mouse),
@@ -18,6 +34,10 @@ impl App {
                     return;
                 };
                 self.cursor = point;
+                if self.mode == Mode::Select {
+                    self.begin_selection_drag(point);
+                    return;
+                }
                 match self.tool {
                     Tool::Line | Tool::Rectangle => {
                         self.shape_drag = Some(ShapeDrag {
@@ -33,6 +53,10 @@ impl App {
                     return;
                 };
                 self.cursor = point;
+                if self.mode == Mode::Select {
+                    self.update_selection_drag(point);
+                    return;
+                }
                 if let Some(drag) = &mut self.shape_drag {
                     drag.current = point;
                 } else if matches!(self.tool, Tool::Pencil | Tool::Eraser) {
@@ -40,6 +64,14 @@ impl App {
                 }
             }
             MouseEventKind::Up(MouseButton::Left) => {
+                if self.mode == Mode::Select {
+                    if let Some(point) = point {
+                        self.cursor = point;
+                        self.update_selection_drag(point);
+                    }
+                    self.finish_selection_drag();
+                    return;
+                }
                 if let Some(point) = point {
                     self.cursor = point;
                     if let Some(mut drag) = self.shape_drag.take() {
@@ -49,17 +81,89 @@ impl App {
                 }
             }
             MouseEventKind::Down(MouseButton::Right) => {
-                if let Some(point) = point {
-                    if let Some(cell) = self.project.canvas().composite_cell(point).cloned() {
-                        if !cell.transparent {
-                            self.brush = cell;
-                            self.status = "Picked glyph and style".to_owned();
+                if point.is_some() {
+                    self.pan_drag = Some(PanDrag {
+                        start_column: mouse.column,
+                        start_row: mouse.row,
+                        origin: self.regions.viewport_origin,
+                        moved: false,
+                    });
+                }
+            }
+            MouseEventKind::Drag(MouseButton::Right) => {
+                let Some(mut drag) = self.pan_drag else {
+                    return;
+                };
+                let dx = i32::from(mouse.column) - i32::from(drag.start_column);
+                let dy = i32::from(mouse.row) - i32::from(drag.start_row);
+                drag.moved |= dx != 0 || dy != 0;
+                self.pan_viewport(drag.origin, -dx, -dy);
+                self.pan_drag = Some(drag);
+            }
+            MouseEventKind::Up(MouseButton::Right) => {
+                let Some(drag) = self.pan_drag.take() else {
+                    return;
+                };
+                if !drag.moved {
+                    if let Some(point) = point {
+                        if let Some(cell) = self.project.canvas().composite_cell(point).cloned() {
+                            if !cell.transparent {
+                                self.brush = cell;
+                                self.status = "Picked glyph and style".to_owned();
+                            }
                         }
                     }
                 }
             }
             MouseEventKind::ScrollUp => self.cycle_glyph(true),
             MouseEventKind::ScrollDown => self.cycle_glyph(false),
+            _ => {}
+        }
+    }
+
+    fn handle_export_mouse(&mut self, mouse: MouseEvent) {
+        match mouse.kind {
+            MouseEventKind::ScrollUp => self.scroll_export(0, -3),
+            MouseEventKind::ScrollDown => self.scroll_export(0, 3),
+            MouseEventKind::Down(MouseButton::Left) => {
+                self.export_focused = true;
+                if let Some(point) = self.export_text_point(mouse.column, mouse.row) {
+                    self.export_drag_anchor = Some(point);
+                    self.export_selection = Some(TextSelection {
+                        anchor: point,
+                        head: point,
+                    });
+                    self.status = "Live export focused; drag to select".to_owned();
+                }
+            }
+            MouseEventKind::Drag(MouseButton::Left) => {
+                if let (Some(anchor), Some(point)) = (
+                    self.export_drag_anchor,
+                    self.export_text_point(mouse.column, mouse.row),
+                ) {
+                    self.export_selection = Some(TextSelection {
+                        anchor,
+                        head: point,
+                    });
+                }
+            }
+            MouseEventKind::Up(MouseButton::Left) => {
+                if let (Some(anchor), Some(point)) = (
+                    self.export_drag_anchor,
+                    self.export_text_point(mouse.column, mouse.row),
+                ) {
+                    self.export_selection = Some(TextSelection {
+                        anchor,
+                        head: point,
+                    });
+                }
+                self.export_drag_anchor = None;
+            }
+            MouseEventKind::Down(MouseButton::Right) => {
+                self.export_selection = None;
+                self.export_drag_anchor = None;
+                self.status = "Live export selection cleared".to_owned();
+            }
             _ => {}
         }
     }
@@ -124,5 +228,4 @@ impl App {
             _ => {}
         }
     }
-
 }
