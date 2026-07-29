@@ -144,6 +144,8 @@ The live Rust pane can be opened or tucked away from the right-side tool rail. C
 | `:` | Command mode |
 | `?` or `F1` | Open help; scroll with arrows, `j/k`, `PgUp/PgDn`, `g/G`, or the wheel |
 
+When help is open, `Home` or `g` jumps to the top, `End` or `G` jumps to the bottom, and `Esc`, `?`, or `F1` closes it.
+
 When the live export pane is focused, use `j/k`, the arrow keys, the mouse wheel, `PgUp/PgDn`, or `g/G`. Horizontal scrolling uses `h/l` or the left/right arrows. `Esc` returns focus to the editor.
 
 ## Commands
