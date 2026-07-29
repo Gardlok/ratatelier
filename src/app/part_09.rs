@@ -11,6 +11,23 @@ const EXPORT_KINDS: &[&str] = &["art", "plain", "animation", "component"];
 const PASTE_TAB_WIDTH: usize = 4;
 
 impl App {
+    fn system_clipboard(&mut self) -> Result<&mut SystemClipboard, String> {
+        if self.system_clipboard.is_none() {
+            self.system_clipboard = Some(SystemClipboard::connect()?);
+        }
+        self.system_clipboard
+            .as_mut()
+            .ok_or_else(|| "System clipboard initialization failed".to_owned())
+    }
+
+    fn write_system_clipboard(&mut self, text: String) -> Result<(), String> {
+        self.system_clipboard()?.write(text)
+    }
+
+    fn read_system_clipboard(&mut self) -> Result<String, String> {
+        self.system_clipboard()?.read()
+    }
+
     fn reset_command_completion(&mut self) {
         self.command_completion = None;
         self.command_hint.clear();
@@ -80,7 +97,7 @@ impl App {
     }
 
     fn paste_from_system_clipboard(&mut self) {
-        match cli_clipboard::get_contents() {
+        match self.read_system_clipboard() {
             Ok(text) if !text.is_empty() => {
                 if self.mode == Mode::Command {
                     self.append_command_text(&text);
@@ -118,11 +135,8 @@ impl App {
     }
 
     fn paste_external_text(&mut self, text: &str) {
-        let (clipboard, rejected) = clipboard_from_text(
-            text,
-            &self.brush.style,
-            self.project.canvas().mode,
-        );
+        let (clipboard, rejected) =
+            clipboard_from_text(text, &CellStyle::default(), self.project.canvas().mode);
         let Some(clipboard) = clipboard else {
             self.status = "Clipboard text contains no pasteable cells".to_owned();
             return;
@@ -132,9 +146,11 @@ impl App {
         self.clipboard = Some(clipboard);
         self.paste_clipboard();
         self.status = if rejected == 0 {
-            format!("Pasted {width}×{height} text block from system clipboard")
+            format!("Pasted {width}×{height} neutral text block from system clipboard")
         } else {
-            format!("Pasted {width}×{height} text block; skipped {rejected} unsupported glyphs")
+            format!(
+                "Pasted {width}×{height} neutral text block; skipped {rejected} unsupported glyphs"
+            )
         };
     }
 }
@@ -375,6 +391,40 @@ mod clipboard_completion_tests {
         assert_eq!(clipboard.width, 5);
         assert_eq!(clipboard.height, 2);
         assert_eq!(clipboard.text, "ab  c\nde   ");
+    }
+
+    #[test]
+    fn external_text_pastes_with_neutral_style() {
+        let mut app = App::new(Project::new("test", 4, 4), None);
+        app.brush.style.fg = ColorSpec::LightRed;
+        app.brush.style.bold = true;
+        app.paste_external_text("x");
+        let cell = app.project.canvas().active_cell(Point::default()).unwrap();
+        assert_eq!(cell.style, CellStyle::default());
+    }
+
+    #[test]
+    fn internal_clipboard_paste_preserves_cell_style() {
+        let mut app = App::new(Project::new("test", 4, 4), None);
+        let style = CellStyle {
+            fg: ColorSpec::LightMagenta,
+            bold: true,
+            ..CellStyle::default()
+        };
+        app.clipboard = Some(Clipboard {
+            width: 1,
+            height: 1,
+            cells: vec![Cell::painted('x', style.clone())],
+            text: "x".to_owned(),
+        });
+        app.cursor = Point::new(2, 1);
+        assert!(app.paste_clipboard());
+        let cell = app
+            .project
+            .canvas()
+            .active_cell(Point::new(2, 1))
+            .unwrap();
+        assert_eq!(cell.style, style);
     }
 
     #[test]
