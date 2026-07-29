@@ -3,8 +3,17 @@ const COMMAND_NAMES: &[&str] = &[
     "panel", "q", "q!", "quit", "quit!", "resize", "scene", "state", "text", "title",
     "tools", "value", "w", "widget", "wq", "write",
 ];
-const FRAME_ACTIONS: &[&str] = &["add", "duplicate", "delete"];
-const LAYER_ACTIONS: &[&str] = &["add", "delete"];
+const FRAME_ACTIONS: &[&str] = &[
+    "add", "duplicate", "delete", "previous", "next", "first", "last", "select",
+    "rename", "duration", "hold", "state", "move", "status",
+];
+const LAYER_ACTIONS: &[&str] = &[
+    "add", "duplicate", "delete", "previous", "next", "first", "last", "select",
+    "rename", "show", "hide", "toggle", "move", "status",
+];
+const FRAME_MOVE_TARGETS: &[&str] = &["left", "right", "first", "last"];
+const LAYER_MOVE_TARGETS: &[&str] = &["up", "down", "top", "bottom"];
+const FRAME_STATES: &[&str] = &["normal", "focused", "active", "disabled"];
 const WIDGET_ACTIONS: &[&str] = &["add", "delete"];
 const WIDGET_KINDS: &[&str] = &["block", "paragraph", "gauge", "list", "sparkline"];
 const EXPORT_KINDS: &[&str] = &["art", "plain", "animation", "component"];
@@ -273,7 +282,16 @@ fn argument_completions(preceding: &[&str], position: usize, prefix: &str) -> Ve
     let command = preceding[0];
     match (command, position) {
         ("frame", 1) => complete_values(prefix, FRAME_ACTIONS, false),
+        ("frame", 2) if preceding.get(1) == Some(&"move") => {
+            complete_values(prefix, FRAME_MOVE_TARGETS, false)
+        }
+        ("frame", 2) if preceding.get(1) == Some(&"state") => {
+            complete_values(prefix, FRAME_STATES, false)
+        }
         ("layer", 1) => complete_values(prefix, LAYER_ACTIONS, false),
+        ("layer", 2) if preceding.get(1) == Some(&"move") => {
+            complete_values(prefix, LAYER_MOVE_TARGETS, false)
+        }
         ("widget", 1) => complete_values(prefix, WIDGET_ACTIONS, true),
         ("widget", 2) if preceding.get(1) == Some(&"add") => {
             complete_values(prefix, WIDGET_KINDS, false)
@@ -428,9 +446,11 @@ mod clipboard_completion_tests {
     }
 
     #[test]
-    fn command_completion_matches_commands_and_subcommands() {
+    fn command_completion_matches_composition_actions() {
         assert!(command_completions("op").contains(&"open ".to_owned()));
         assert!(command_completions("frame d").contains(&"frame delete".to_owned()));
+        assert!(command_completions("frame move r").contains(&"frame move right".to_owned()));
+        assert!(command_completions("layer move t").contains(&"layer move top".to_owned()));
         assert!(command_completions("widget add sp")
             .contains(&"widget add sparkline".to_owned()));
     }
