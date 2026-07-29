@@ -152,6 +152,7 @@ impl App {
     fn clamp_cursor(&mut self) {
         self.cursor.x = self.cursor.x.min(self.project.canvas().width.saturating_sub(1));
         self.cursor.y = self.cursor.y.min(self.project.canvas().height.saturating_sub(1));
+        self.ensure_cursor_visible();
     }
 
     fn toggle_playback(&mut self) {
