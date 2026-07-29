@@ -122,7 +122,7 @@ fn draw_footer(frame: &mut Frame<'_>, app: &App) {
             ),
             Span::raw(" "),
             Span::styled(app.status.as_str(), Style::default().fg(Color::Gray)),
-            Span::raw("  │  Tab workspace  ? help  Ctrl-S save  Ctrl-Q quit"),
+            Span::raw("  │  Tab workspace  ? help  Ctrl-S save  Ctrl-X quit"),
         ])
     };
     frame.render_widget(Paragraph::new(content), app.regions.footer);
@@ -139,7 +139,7 @@ fn draw_help(frame: &mut Frame<'_>, app: &App) {
                 .add_modifier(Modifier::BOLD),
         ),
         Line::from(""),
-        Line::from("Global: Tab workspace · Ctrl-S save · Ctrl-Q quit · : command · ? close help"),
+        Line::from("Global: Tab workspace · Ctrl-S save · Ctrl-X quit · : command · ? close help"),
         Line::from(""),
         Line::styled("Artwork", Style::default().fg(Color::LightGreen)),
         Line::from("h/j/k/l move · d draw · e erase · i insert · v select · u undo · Ctrl-R redo"),
