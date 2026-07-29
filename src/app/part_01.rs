@@ -110,6 +110,16 @@ impl App {
                     self.toggle_export_panel();
                     return;
                 }
+                KeyCode::Char('a') => {
+                    if self.workspace == Workspace::Artwork
+                        && self.mode != Mode::Command
+                        && !self.show_help
+                        && !self.export_focused
+                    {
+                        self.select_all();
+                        return;
+                    }
+                }
                 KeyCode::Char('c') => {
                     if self.workspace == Workspace::Artwork && self.selection.is_some() {
                         self.copy_selection(false);
