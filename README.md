@@ -1,60 +1,28 @@
 # Ratatelier
 
-**A terminal atelier for glyphs, Ratatui components, and motion.**
+**A terminal atelier for glyphs, Ratatui widgets, and motion.**
 
-Ratatelier is a Rust + Ratatui workbench for designing terminal artwork and interface components away from the codebase that will eventually consume them. It combines a cell editor, frame animation, component-state prototyping, RON project files, and live Rust code generation in one mouse-aware TUI.
+Terminal art usually starts life in the least artistic place imaginable: a Rust string full of escapes, spacing guesses, and crossed fingers.
 
-## Current capabilities
+Ratatelier gives that work a bench of its own. Sketch the glyphs, arrange the widgets, test the motion, then carry the finished piece back into your application as RON, plain text, or generated Ratatui code.
 
-### Artwork studio
+Think of it as mise en place for a TUI: shape, color, timing, and component states laid out before the real cooking begins.
 
-- Cell-accurate ASCII or terminal-safe Unicode canvases
-- Pencil, eraser, line, rectangle, and flood-fill tools
-- Foreground/background color and text modifiers
-- Mouse painting, shape dragging, glyph picking, and wheel palettes
-- Helix-like modal controls for normal, draw, insert, select, and command modes
-- Layer creation and deletion
-- Internal selection clipboard with copy, cut, and paste
-- Bounded undo and redo history
+## What is on the bench
 
-### Animation studio
+- ASCII and terminal-safe Unicode canvases
+- Pencil, eraser, line, rectangle, and fill tools
+- Layers, selections, copy/cut/paste, undo, and redo
+- Frame animation with per-frame timing and widget state
+- Block, paragraph, gauge, list, and sparkline mockups
+- Mouse painting, selection dragging, canvas panning, and component resizing
+- Versioned RON projects with atomic saves
+- Live Rust export plus artwork, component, animation, and plain-text exports
 
-- Add, duplicate, delete, and navigate frames
-- Per-frame duration
-- Playback in the editor
-- Per-frame widget state: normal, focused, active, or disabled
-- Shared frame timeline for artwork and component-state animation
-
-Widget-state animation means that an animation frame can change not only the glyph artwork, but also the state used to render a component mockup. A sequence can therefore demonstrate focus changes, active controls, disabled states, progress transitions, and other interface behavior.
-
-### Component workshop
-
-- Fixed logical design surface that scales into the current terminal
-- Block, paragraph, gauge, list, and sparkline widgets
-- Keyboard and mouse movement/resizing
-- Per-state styling
-- Editable title, text, values, type, and geometry
-- Live Ratatui `Widget` implementation preview
-
-### Files and export
-
-- Human-readable, versioned RON project files
-- Atomic save through a temporary file and rename
-- Rust artwork widget export
-- Rust component widget export
-- Plain-text art export
-- Frame-array animation export
-- Live generated-code pane
-
-## Installation
+## Start working
 
 ```bash
 cargo install --path .
-```
-
-Run a new project:
-
-```bash
 ratatelier --width 64 --height 20
 ```
 
@@ -64,26 +32,44 @@ Open an existing project:
 ratatelier artwork.ron
 ```
 
+Inside the editor, `Tab` moves between the artwork and component benches. Press `?` whenever the key map escapes your memory.
+
+## Mouse controls
+
+On the artwork canvas:
+
+- Left click places the cursor and applies the current tool.
+- Left drag paints, shapes, or extends a selection.
+- Drag an existing selection to move its cells.
+- Right drag grabs and pans a canvas larger than the window.
+- Right click without dragging picks the glyph and style under the pointer.
+- The wheel cycles the glyph palette.
+
+On the component surface, left drag moves a widget and right drag resizes it.
+
+The live Rust pane can be opened or tucked away from the right-side tool rail. Click inside it to focus, drag to select text, and use the wheel or navigation keys to scroll.
+
 ## Essential controls
 
 | Key | Action |
 | --- | --- |
 | `Tab` | Switch Artwork / Components |
-| `h j k l` | Move cursor or selected component |
+| `h j k l` | Move cursor, widget, or focused export pane |
 | `d` / `e` / `i` / `v` | Draw / erase / insert / select mode |
 | `1`..`5` | Pencil / eraser / line / rectangle / fill |
-| `Space` | Apply tool or set/commit shape anchor |
+| `Space` | Apply tool or set/commit a shape anchor |
 | `[` / `]` | Cycle brush glyph or selected widget |
 | `n` / `N` / `X` | Add / duplicate / delete frame |
 | `,` / `.` | Previous / next frame |
 | `p` / `s` | Playback / cycle widget state |
 | `u` / `Ctrl-r` | Undo / redo |
+| `F2` or `Ctrl-e` | Toggle the live Rust pane |
 | `Ctrl-s` | Save |
-| `Ctrl-x` | Quit, prompting when unsaved changes exist |
+| `Ctrl-x` | Quit, warning about unsaved work |
 | `:` | Command mode |
-| `?` or `F1` | In-app help |
+| `?` or `F1` | Help |
 
-Mouse support is enabled at startup. In the artwork workspace, left-drag paints or defines shapes, right-click picks a cell, and the wheel cycles glyphs. In the component workspace, left-drag moves and right-drag resizes.
+When the live export pane is focused, use `j/k`, the arrow keys, the mouse wheel, `PgUp/PgDn`, or `g/G`. Horizontal scrolling uses `h/l` or the left/right arrows. `Esc` returns focus to the editor.
 
 ## Commands
 
@@ -101,37 +87,18 @@ Mouse support is enabled at startup. In the artwork workspace, left-drag paints 
 :title Widget title                    edit selected widget
 :text Text with optional \n escapes    edit selected widget content
 :value 0..100                          edit selected gauge value
+:panel                                 toggle the live Rust pane
 :export [path]                         export current workspace as Rust
 :export art|plain|animation|component [path]
 :wq                                    save and quit
 :q!                                    discard unsaved changes and quit
 ```
 
-## Project structure
+## Project files
 
-```text
-src/
-├── app.rs       event loop, modes, commands, history, mouse/keyboard input
-├── app/         implementation sections included by app.rs
-├── export.rs    Rust, plain text, component, and animation generators
-├── geometry.rs  line, rectangle, and flood-fill algorithms
-├── model.rs     versioned project, frames, layers, cells, and widgets
-├── storage.rs   RON loading and atomic saving
-├── ui.rs        Ratatui rendering and coordinate mapping
-├── ui/          rendering sections included by ui.rs
-├── lib.rs
-└── main.rs
-```
+Ratatelier projects are human-readable RON. The format stores the artwork frames, layers, styles, timing, component scene, and widget states together, so a project can move between machines without a separate asset directory.
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the design boundaries and extension path.
-
-## Unicode scope
-
-Unicode mode accepts printable glyphs that occupy at most one terminal cell according to `unicode-width`. This includes box drawing, blocks, geometric symbols, and a broad range of terminal-safe characters while avoiding ambiguous two-cell overlap. Full grapheme-cluster and wide-glyph editing is a future project-format extension.
-
-## Status
-
-Ratatelier is at `0.1.0`: a functional first implementation intended for local use and iteration. The project format is versioned, but compatibility guarantees begin after the editor model has received real-world use.
+Unicode mode accepts printable single-cell glyphs. Wide glyph and grapheme-cluster editing remain outside the current format.
 
 ## License
 
