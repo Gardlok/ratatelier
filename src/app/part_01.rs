@@ -18,6 +18,7 @@ impl App {
             ),
             selection: None,
             command: String::new(),
+            command_hint: String::new(),
             status: "Ready. Tab switches workspaces; ? opens help.".to_owned(),
             dirty: false,
             running: true,
@@ -31,6 +32,8 @@ impl App {
             history: Vec::new(),
             future: Vec::new(),
             clipboard: None,
+            system_clipboard: None,
+            command_completion: None,
             shape_drag: None,
             component_drag: None,
             pan_drag: None,
@@ -83,7 +86,8 @@ impl App {
                 self.handle_key(key);
             }
             Event::Mouse(mouse) => self.handle_mouse(mouse),
-            Event::Resize(_, _) | Event::FocusGained | Event::FocusLost | Event::Paste(_) => {}
+            Event::Paste(text) => self.handle_paste_event(&text),
+            Event::Resize(_, _) | Event::FocusGained | Event::FocusLost => {}
             _ => {}
         }
     }
@@ -105,6 +109,30 @@ impl App {
                 }
                 KeyCode::Char('e') => {
                     self.toggle_export_panel();
+                    return;
+                }
+                KeyCode::Char('a') => {
+                    if self.workspace == Workspace::Artwork
+                        && self.mode != Mode::Command
+                        && !self.show_help
+                        && !self.export_focused
+                    {
+                        self.select_all();
+                        return;
+                    }
+                }
+                KeyCode::Char('c') => {
+                    if self.workspace == Workspace::Artwork && self.selection.is_some() {
+                        self.copy_selection(false);
+                        self.mode = Mode::Normal;
+                        return;
+                    }
+                }
+                KeyCode::Char('v') => {
+                    self.paste_from_system_clipboard();
+                    if self.mode == Mode::Select {
+                        self.mode = Mode::Normal;
+                    }
                     return;
                 }
                 _ => {}
@@ -151,6 +179,7 @@ impl App {
             KeyCode::Char(':') => {
                 self.mode = Mode::Command;
                 self.command.clear();
+                self.reset_command_completion();
                 self.export_focused = false;
                 return;
             }

@@ -1,7 +1,12 @@
 pub fn run(app: &mut App) -> io::Result<()> {
     enable_raw_mode()?;
     let mut output = stdout();
-    execute!(output, EnterAlternateScreen, EnableMouseCapture)?;
+    execute!(
+        output,
+        EnterAlternateScreen,
+        EnableMouseCapture,
+        EnableBracketedPaste
+    )?;
     let backend = CrosstermBackend::new(output);
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
@@ -11,8 +16,9 @@ pub fn run(app: &mut App) -> io::Result<()> {
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
+        DisableBracketedPaste,
+        DisableMouseCapture,
+        LeaveAlternateScreen
     )?;
     terminal.show_cursor()?;
     result

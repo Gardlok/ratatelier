@@ -45,7 +45,7 @@ impl App {
                     anchor: self.cursor,
                     head: self.cursor,
                 });
-                self.status = "Selection started; y copies, x cuts, p pastes".to_owned();
+                self.status = "Selection started; y yanks, x cuts, p pastes".to_owned();
             }
             KeyCode::Char('u') => self.undo(),
             KeyCode::Char('1') => self.select_tool(Tool::Pencil),
@@ -110,7 +110,7 @@ impl App {
             KeyCode::Char('s') => self.cycle_widget_state(),
             KeyCode::Char('+') | KeyCode::Char('=') => self.adjust_duration(20),
             KeyCode::Char('-') => self.adjust_duration(-20),
-            KeyCode::Char('P') => self.paste_clipboard(),
+            KeyCode::Char('P') => self.paste_from_system_clipboard(),
             _ => {}
         }
     }
@@ -184,7 +184,7 @@ impl App {
                 self.mode = Mode::Normal;
             }
             KeyCode::Char('p') => {
-                self.paste_clipboard();
+                self.paste_from_system_clipboard();
                 self.mode = Mode::Normal;
             }
             _ => {}
@@ -280,18 +280,25 @@ impl App {
             KeyCode::Esc => {
                 self.mode = Mode::Normal;
                 self.command.clear();
+                self.reset_command_completion();
             }
             KeyCode::Enter => {
                 let command = std::mem::take(&mut self.command);
                 self.mode = Mode::Normal;
+                self.reset_command_completion();
                 self.execute_command(command.trim());
             }
             KeyCode::Backspace => {
                 self.command.pop();
+                self.reset_command_completion();
             }
-            KeyCode::Char(character) => self.command.push(character),
+            KeyCode::Tab => self.complete_command(false),
+            KeyCode::BackTab => self.complete_command(true),
+            KeyCode::Char(character) => {
+                self.command.push(character);
+                self.reset_command_completion();
+            }
             _ => {}
         }
     }
-
 }

@@ -170,4 +170,15 @@ mod tests {
         assert_eq!(line.spans.len(), 3);
         assert_eq!(line.spans[1].content.as_ref(), "bcd");
     }
+
+    #[test]
+    fn timeline_window_keeps_the_active_frame_visible() {
+        let labels: Vec<String> = (1..=24)
+            .map(|index| format!(" {index} · 120ms · normal "))
+            .collect();
+        let (start, end) = timeline_visible_range(&labels, 19, 48);
+        assert!(start <= 19);
+        assert!(19 < end);
+        assert!(start > 0);
+    }
 }

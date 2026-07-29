@@ -12,10 +12,12 @@ Think of it as mise en place for a TUI: shape, color, timing, and component stat
 
 - ASCII and terminal-safe Unicode canvases
 - Pencil, eraser, line, rectangle, and fill tools
-- Layers, selections, copy/cut/paste, undo, and redo
+- Layers, selections, system clipboard support, undo, and redo
 - Frame animation with per-frame timing and widget state
+- A timeline that follows the active frame during navigation and playback
 - Block, paragraph, gauge, list, and sparkline mockups
 - Mouse painting, selection dragging, canvas panning, and component resizing
+- Command, subcommand, directory, and file completion
 - Versioned RON projects with atomic saves
 - Live Rust export plus artwork, component, animation, and plain-text exports
 
@@ -43,6 +45,14 @@ ratatelier artwork.ron
 
 Inside the editor, `Tab` moves between the artwork and component benches. Press `?` whenever the key map escapes your memory.
 
+## Clipboard and command line
+
+Selections use a long-lived system clipboard provider, so copied text remains available to other applications while Ratatelier is running. `y` yanks and `x` cuts the selected rectangle as plain text while retaining the styled cells internally. Pasting that Ratatelier-owned content back restores its original colors and modifiers.
+
+Text copied from another application is pasted with neutral cell styling. It does not inherit the active brush, because clipboard text and brush paint are separate ingredients. Terminal paste events and `Ctrl-v` accept multiline text; unsupported or double-width glyphs are skipped when the canvas mode cannot represent them.
+
+In command mode, `Tab` and `Shift-Tab` cycle matching commands, subcommands, directories, and files. Path completion lists directories first and keeps walking as `/` is added.
+
 ## Mouse controls
 
 On the artwork canvas:
@@ -62,15 +72,19 @@ The live Rust pane can be opened or tucked away from the right-side tool rail. C
 
 | Key | Action |
 | --- | --- |
-| `Tab` | Switch Artwork / Components |
+| `Tab` | Switch Artwork / Components; complete commands in command mode |
+| `Shift-Tab` | Previous command completion |
 | `h j k l` | Move cursor, widget, or focused export pane |
 | `d` / `e` / `i` / `v` | Draw / erase / insert / select mode |
+| `Ctrl-a` | Select the entire artwork canvas |
+| `y` / `x` / `p` | Yank / cut / paste selected cells through the system clipboard |
+| `Ctrl-c` / `Ctrl-v` | Copy selection / paste external clipboard text |
 | `1`..`5` | Pencil / eraser / line / rectangle / fill |
 | `Space` | Apply tool or set/commit a shape anchor |
 | `[` / `]` | Cycle brush glyph or selected widget |
 | `n` / `N` / `X` | Add / duplicate / delete frame |
 | `,` / `.` | Previous / next frame |
-| `p` / `s` | Playback / cycle widget state |
+| `p` / `s` | Playback / cycle widget state outside select mode |
 | `u` / `Ctrl-r` | Undo / redo |
 | `F2` or `Ctrl-e` | Toggle the live Rust pane |
 | `Ctrl-s` | Save |
