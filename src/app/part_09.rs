@@ -295,8 +295,7 @@ fn complete_values(prefix: &str, values: &[&str], trailing_space: bool) -> Vec<S
 }
 
 fn looks_like_path(prefix: &str) -> bool {
-    prefix.is_empty()
-        || prefix.starts_with('.')
+    prefix.starts_with('.')
         || prefix.starts_with('~')
         || prefix.starts_with('/')
         || prefix.contains('/')
@@ -353,7 +352,7 @@ fn expand_completion_directory(directory: &str) -> PathBuf {
         if let Some(home) = std::env::var_os("HOME") {
             let suffix = directory
                 .trim_start_matches('~')
-                .trim_start_matches(['/', '\\']);
+                .trim_start_matches(|character| character == '/' || character == '\\');
             return PathBuf::from(home).join(suffix);
         }
     }
@@ -384,6 +383,22 @@ mod clipboard_completion_tests {
         assert!(command_completions("frame d").contains(&"frame delete".to_owned()));
         assert!(command_completions("widget add sp")
             .contains(&"widget add sparkline".to_owned()));
+    }
+
+    #[test]
+    fn filesystem_completion_lists_matching_files_and_directories() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("ratatelier-completion-{unique}"));
+        std::fs::create_dir_all(root.join("frames")).unwrap();
+        std::fs::write(root.join("frame.ron"), "test").unwrap();
+        let prefix = format!("{}/fra", root.display());
+        let matches = path_completions(&prefix);
+        assert!(matches.iter().any(|candidate| candidate.ends_with("frames/")));
+        assert!(matches.iter().any(|candidate| candidate.ends_with("frame.ron")));
+        std::fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
