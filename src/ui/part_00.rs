@@ -10,7 +10,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::{App, Mode, Workspace},
+    app::{App, Mode, TextSelection, Workspace},
     export,
     model::{CellStyle, ColorSpec, Point, RectSpec, WidgetKind},
 };
@@ -21,6 +21,8 @@ pub struct UiRegions {
     pub inspector: Rect,
     pub workspace: Rect,
     pub code: Rect,
+    pub code_inner: Rect,
+    pub toolbar: Rect,
     pub timeline: Rect,
     pub footer: Rect,
     pub canvas_inner: Rect,
@@ -68,34 +70,45 @@ pub fn calculate_regions(area: Rect, app: &App) -> UiRegions {
             Constraint::Length(2),
         ])
         .split(area);
-    let body = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
+    let body_constraints = if app.show_export {
+        vec![
             Constraint::Length(26),
             Constraint::Min(30),
             Constraint::Length(42),
-        ])
+            Constraint::Length(8),
+        ]
+    } else {
+        vec![
+            Constraint::Length(26),
+            Constraint::Min(30),
+            Constraint::Length(0),
+            Constraint::Length(8),
+        ]
+    };
+    let body = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(body_constraints)
         .split(vertical[1]);
 
     let workspace_inner = body[1].inner(ratatui::layout::Margin {
         horizontal: 1,
         vertical: 1,
     });
+    let code_inner = if body[2].width > 2 && body[2].height > 2 {
+        body[2].inner(ratatui::layout::Margin {
+            horizontal: 1,
+            vertical: 1,
+        })
+    } else {
+        Rect::default()
+    };
     let canvas = app.project.canvas();
     let visible_width = workspace_inner.width.min(canvas.width);
     let visible_height = workspace_inner.height.min(canvas.height);
     let max_x = canvas.width.saturating_sub(visible_width);
     let max_y = canvas.height.saturating_sub(visible_height);
-    let origin_x = app
-        .cursor
-        .x
-        .saturating_sub(visible_width / 2)
-        .min(max_x);
-    let origin_y = app
-        .cursor
-        .y
-        .saturating_sub(visible_height / 2)
-        .min(max_y);
+    let origin_x = app.viewport_origin.x.min(max_x);
+    let origin_y = app.viewport_origin.y.min(max_y);
     let centered_x = workspace_inner.x + workspace_inner.width.saturating_sub(visible_width) / 2;
     let centered_y = workspace_inner.y + workspace_inner.height.saturating_sub(visible_height) / 2;
 
@@ -104,6 +117,8 @@ pub fn calculate_regions(area: Rect, app: &App) -> UiRegions {
         inspector: body[0],
         workspace: body[1],
         code: body[2],
+        code_inner,
+        toolbar: body[3],
         timeline: vertical[2],
         footer: vertical[3],
         canvas_inner: Rect::new(centered_x, centered_y, visible_width, visible_height),
@@ -120,7 +135,10 @@ pub fn draw(frame: &mut Frame<'_>, app: &App) {
         Workspace::Artwork => draw_artwork(frame, app),
         Workspace::Components => draw_components(frame, app),
     }
-    draw_code(frame, app);
+    if app.show_export {
+        draw_code(frame, app);
+    }
+    draw_toolbar(frame, app);
     draw_timeline(frame, app);
     draw_footer(frame, app);
     if app.show_help {
