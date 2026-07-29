@@ -1,9 +1,11 @@
 use std::{
+    fmt,
     io::{self, stdout},
     path::{Path, PathBuf},
     time::{Duration, Instant},
 };
 
+use cli_clipboard::ClipboardProvider;
 use crossterm::{
     event::{
         self, DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste,
@@ -175,6 +177,36 @@ struct CommandCompletion {
     index: usize,
 }
 
+struct SystemClipboard {
+    context: cli_clipboard::ClipboardContext,
+}
+
+impl fmt::Debug for SystemClipboard {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.debug_struct("SystemClipboard").finish_non_exhaustive()
+    }
+}
+
+impl SystemClipboard {
+    fn connect() -> Result<Self, String> {
+        cli_clipboard::ClipboardContext::new()
+            .map(|context| Self { context })
+            .map_err(|error| error.to_string())
+    }
+
+    fn read(&mut self) -> Result<String, String> {
+        self.context
+            .get_contents()
+            .map_err(|error| error.to_string())
+    }
+
+    fn write(&mut self, text: String) -> Result<(), String> {
+        self.context
+            .set_contents(text)
+            .map_err(|error| error.to_string())
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 struct ShapeDrag {
     start: Point,
@@ -239,6 +271,7 @@ pub struct App {
     history: Vec<Project>,
     future: Vec<Project>,
     clipboard: Option<Clipboard>,
+    system_clipboard: Option<SystemClipboard>,
     command_completion: Option<CommandCompletion>,
     shape_drag: Option<ShapeDrag>,
     component_drag: Option<ComponentDrag>,
