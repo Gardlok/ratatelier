@@ -23,8 +23,19 @@ fn draw_inspector(frame: &mut Frame<'_>, app: &App) {
         Workspace::Artwork => artwork_inspector(app),
         Workspace::Components => component_inspector(app),
     };
+    let title = match app.workspace {
+        Workspace::Artwork => {
+            let canvas = app.project.canvas();
+            format!(
+                " Inspector · Layer {}/{} ",
+                canvas.active_layer + 1,
+                canvas.layers.len()
+            )
+        }
+        Workspace::Components => " Inspector ".to_owned(),
+    };
     let inspector = Paragraph::new(lines)
-        .block(Block::default().borders(Borders::ALL).title(" Inspector "))
+        .block(Block::default().borders(Borders::ALL).title(title))
         .wrap(Wrap { trim: false });
     frame.render_widget(inspector, app.regions.inspector);
 }
@@ -32,6 +43,11 @@ fn draw_inspector(frame: &mut Frame<'_>, app: &App) {
 fn artwork_inspector(app: &App) -> Vec<Line<'static>> {
     let canvas = app.project.canvas();
     let frame = app.project.frame();
+    let layer = &canvas.layers[canvas.active_layer];
+    let visibility = if layer.visible { "visible" } else { "hidden" };
+    let stack_capacity = usize::from(app.regions.inspector.height.saturating_sub(2))
+        .saturating_sub(21)
+        .clamp(1, 7);
     let mut lines = vec![
         labeled("Mode", app.mode.label()),
         labeled("Tool", app.tool.label()),
@@ -48,6 +64,15 @@ fn artwork_inspector(app: &App) -> Vec<Line<'static>> {
         ),
         labeled("Duration", format!("{} ms", frame.duration_ms)),
         labeled("State", frame.widget_state.label()),
+        labeled(
+            "Layer",
+            format!(
+                "{}/{} · {} · {visibility}",
+                canvas.active_layer + 1,
+                canvas.layers.len(),
+                layer.name
+            ),
+        ),
         Line::from(""),
         labeled("Brush", format!("[{}]", app.brush.glyph)),
         labeled("Foreground", app.brush.style.fg.label()),
@@ -55,18 +80,13 @@ fn artwork_inspector(app: &App) -> Vec<Line<'static>> {
         Line::from(""),
         Line::styled("Layers · top to bottom", Style::default().fg(Color::DarkGray)),
     ];
-    lines.extend(layer_stack_lines(app, 7));
+    lines.extend(layer_stack_lines(app, stack_capacity));
     lines.extend([
         Line::from(""),
         Line::styled("Composition controls", Style::default().fg(Color::DarkGray)),
-        Line::from("PgUp/PgDn  layer"),
-        Line::from("V/D         vis/duplicate"),
-        Line::from("a/A         add/delete"),
-        Line::from(",/.         frame select"),
-        Line::from("</>         frame reorder"),
-        Line::from("+/-         duration"),
-        Line::from(":frame …    properties"),
-        Line::from(":layer …    management"),
+        Line::from("PgUp/PgDn layer · ,/. frame"),
+        Line::from("V visibility · D duplicate · </> reorder"),
+        Line::from(":layer / :frame full management"),
     ]);
     lines
 }
