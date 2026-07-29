@@ -17,10 +17,15 @@ impl App {
                 );
             }
         }
+        let text = cells_to_text(bounds.width, bounds.height, &cells);
+        let system_error = cli_clipboard::set_contents(text.clone())
+            .err()
+            .map(|error| error.to_string());
         self.clipboard = Some(Clipboard {
             width: bounds.width,
             height: bounds.height,
             cells,
+            text,
         });
         if cut {
             self.snapshot();
@@ -31,16 +36,18 @@ impl App {
                         .erase_cell(Point::new(bounds.x + x, bounds.y + y));
                 }
             }
-            self.mark_dirty("Selection cut");
+            self.mark_dirty("Selection cut to clipboard");
         } else {
-            self.status = "Selection copied".to_owned();
+            self.status = "Selection yanked to clipboard".to_owned();
+        }
+        if let Some(error) = system_error {
+            self.status = format!("{}; system clipboard unavailable: {error}", self.status);
         }
     }
 
-    fn paste_clipboard(&mut self) {
+    fn paste_clipboard(&mut self) -> bool {
         let Some(clipboard) = self.clipboard.clone() else {
-            self.status = "Clipboard is empty".to_owned();
-            return;
+            return false;
         };
         self.snapshot();
         for y in 0..clipboard.height {
@@ -55,6 +62,7 @@ impl App {
             }
         }
         self.mark_dirty("Clipboard pasted");
+        true
     }
 
     fn move_widget(&mut self, dx: i32, dy: i32) {
