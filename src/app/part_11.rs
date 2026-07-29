@@ -25,7 +25,7 @@ impl App {
     fn select_previous_layer(&mut self) {
         let index = {
             let canvas = self.project.canvas();
-            (canvas.active_layer + canvas.layers.len() - 1) % canvas.layers.len()
+            (canvas.active_layer + 1) % canvas.layers.len()
         };
         self.select_layer_index(index);
     }
@@ -33,7 +33,7 @@ impl App {
     fn select_next_layer(&mut self) {
         let index = {
             let canvas = self.project.canvas();
-            (canvas.active_layer + 1) % canvas.layers.len()
+            (canvas.active_layer + canvas.layers.len() - 1) % canvas.layers.len()
         };
         self.select_layer_index(index);
     }
@@ -208,7 +208,21 @@ mod layer_management_tests {
             Cell::painted('t', CellStyle::default()),
         );
         app.set_active_layer_visibility(false);
-        assert_eq!(app.project.canvas().composite_cell(Point::new(0, 0)).unwrap().glyph, "b");
-        assert_eq!(app.project.canvas().active_cell(Point::new(0, 0)).unwrap().glyph, "t");
+        assert_eq!(
+            app.project
+                .canvas()
+                .composite_cell(Point::new(0, 0))
+                .unwrap()
+                .glyph,
+            "b"
+        );
+        assert_eq!(
+            app.project
+                .canvas()
+                .active_cell(Point::new(0, 0))
+                .unwrap()
+                .glyph,
+            "t"
+        );
     }
 }
