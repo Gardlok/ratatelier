@@ -1,3 +1,5 @@
+const ARTWORK_LAYER_LINE_START: usize = 13;
+
 fn draw_header(frame: &mut Frame<'_>, app: &App) {
     let tabs = Tabs::new(["Artwork", "Components"])
         .select(match app.workspace {
@@ -18,11 +20,17 @@ fn draw_header(frame: &mut Frame<'_>, app: &App) {
     frame.render_widget(tabs, app.regions.header);
 }
 
-fn draw_inspector(frame: &mut Frame<'_>, app: &App) {
-    let lines = match app.workspace {
+fn inspector_lines(app: &App) -> Vec<Line<'static>> {
+    match app.workspace {
         Workspace::Artwork => artwork_inspector(app),
         Workspace::Components => component_inspector(app),
-    };
+    }
+}
+
+fn draw_inspector(frame: &mut Frame<'_>, app: &App) {
+    let lines = inspector_lines(app);
+    let maximum = inspector_scroll_limit(app, app.regions.inspector);
+    let scroll = app.inspector_scroll().min(maximum);
     let title = match app.workspace {
         Workspace::Artwork => {
             let canvas = app.project.canvas();
@@ -34,9 +42,22 @@ fn draw_inspector(frame: &mut Frame<'_>, app: &App) {
         }
         Workspace::Components => " Inspector ".to_owned(),
     };
+    let border_style = if app.inspector_focused() {
+        Style::default()
+            .fg(Color::LightCyan)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        Style::default()
+    };
     let inspector = Paragraph::new(lines)
-        .block(Block::default().borders(Borders::ALL).title(title))
-        .wrap(Wrap { trim: false });
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(title)
+                .border_style(border_style),
+        )
+        .wrap(Wrap { trim: false })
+        .scroll((scroll, 0));
     frame.render_widget(inspector, app.regions.inspector);
 }
 
@@ -45,9 +66,6 @@ fn artwork_inspector(app: &App) -> Vec<Line<'static>> {
     let frame = app.project.frame();
     let layer = &canvas.layers[canvas.active_layer];
     let visibility = if layer.visible { "visible" } else { "hidden" };
-    let stack_capacity = usize::from(app.regions.inspector.height.saturating_sub(2))
-        .saturating_sub(21)
-        .clamp(1, 7);
     let mut lines = vec![
         labeled("Mode", app.mode.label()),
         labeled("Tool", app.tool.label()),
@@ -71,7 +89,7 @@ fn artwork_inspector(app: &App) -> Vec<Line<'static>> {
         Line::from(""),
         Line::styled("Layers · top to bottom", Style::default().fg(Color::DarkGray)),
     ];
-    lines.extend(layer_stack_lines(app, stack_capacity));
+    lines.extend(layer_stack_lines(app, canvas.layers.len()));
     lines.extend([
         Line::from(""),
         labeled("Visibility", visibility),
