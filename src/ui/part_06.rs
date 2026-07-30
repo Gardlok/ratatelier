@@ -147,6 +147,37 @@ fn context_hint(app: &App) -> String {
     }
 }
 
+fn draw_context_footer(frame: &mut Frame<'_>, app: &App) {
+    let content = if app.mode == Mode::Command {
+        vec![
+            Line::from(vec![
+                Span::styled(":", Style::default().fg(Color::LightCyan)),
+                Span::raw(app.command.as_str()),
+            ]),
+            Line::styled(
+                app.command_hint.as_str(),
+                Style::default().fg(Color::DarkGray),
+            ),
+        ]
+    } else {
+        vec![
+            Line::from(vec![
+                Span::styled(
+                    format!(" {} ", app.mode.label()),
+                    Style::default()
+                        .fg(Color::Black)
+                        .bg(mode_color(app.mode))
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" "),
+                Span::styled(app.status.as_str(), Style::default().fg(Color::Gray)),
+            ]),
+            Line::styled(context_hint(app), Style::default().fg(Color::DarkGray)),
+        ]
+    };
+    frame.render_widget(Paragraph::new(content), app.regions.footer);
+}
+
 #[cfg(test)]
 mod interaction_polish_ui_tests {
     use super::*;
