@@ -137,25 +137,14 @@ impl App {
     }
 
     fn next_frame(&mut self) {
-        self.project.next_frame();
-        self.clamp_cursor();
-        self.elapsed_in_frame = Duration::ZERO;
-        self.status = format!(
-            "Frame {}/{}",
-            self.project.active_frame + 1,
-            self.project.frames.len()
-        );
+        let index = (self.project.active_frame + 1) % self.project.frames.len();
+        self.select_frame_index(index);
     }
 
     fn previous_frame(&mut self) {
-        self.project.previous_frame();
-        self.clamp_cursor();
-        self.elapsed_in_frame = Duration::ZERO;
-        self.status = format!(
-            "Frame {}/{}",
-            self.project.active_frame + 1,
-            self.project.frames.len()
-        );
+        let index = (self.project.active_frame + self.project.frames.len() - 1)
+            % self.project.frames.len();
+        self.select_frame_index(index);
     }
 
     fn clamp_cursor(&mut self) {
@@ -185,7 +174,10 @@ impl App {
     fn adjust_duration(&mut self, delta: i64) {
         self.snapshot();
         let current = self.project.frame().duration_ms as i64;
-        self.project.frame_mut().duration_ms = (current + delta).clamp(20, 10_000) as u64;
+        self.project.frame_mut().duration_ms =
+            (current + delta).clamp(MIN_FRAME_DURATION_MS as i64, MAX_FRAME_DURATION_MS as i64)
+                as u64;
+        self.elapsed_in_frame = Duration::ZERO;
         self.mark_dirty(format!(
             "Frame duration: {} ms",
             self.project.frame().duration_ms

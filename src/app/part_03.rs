@@ -1,23 +1,34 @@
 impl App {
     fn handle_mouse(&mut self, mouse: MouseEvent) {
-        if self.show_help || self.mode == Mode::Command {
+        if self.show_help {
+            self.handle_help_mouse(mouse);
+            return;
+        }
+        if self.mode == Mode::Command {
+            return;
+        }
+
+        if self.handle_inspector_mouse(mouse) {
             return;
         }
 
         if matches!(mouse.kind, MouseEventKind::Down(MouseButton::Left))
             && region_contains(self.regions.toolbar, mouse.column, mouse.row)
         {
+            self.unfocus_inspector();
             self.toggle_export_panel();
             return;
         }
 
         if self.show_export && region_contains(self.regions.code, mouse.column, mouse.row) {
+            self.unfocus_inspector();
             self.handle_export_mouse(mouse);
             return;
         }
 
         if matches!(mouse.kind, MouseEventKind::Down(MouseButton::Left)) {
             self.export_focused = false;
+            self.unfocus_inspector();
         }
 
         match self.workspace {

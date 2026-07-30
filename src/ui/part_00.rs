@@ -25,6 +25,7 @@ pub struct UiRegions {
     pub toolbar: Rect,
     pub timeline: Rect,
     pub footer: Rect,
+    pub help: Rect,
     pub canvas_inner: Rect,
     pub component_inner: Rect,
     pub viewport_origin: Point,
@@ -121,6 +122,7 @@ pub fn calculate_regions(area: Rect, app: &App) -> UiRegions {
         toolbar: body[3],
         timeline: vertical[2],
         footer: vertical[3],
+        help: centered_rect(82, 92, area),
         canvas_inner: Rect::new(centered_x, centered_y, visible_width, visible_height),
         component_inner: workspace_inner,
         viewport_origin: Point::new(origin_x, origin_y),
@@ -142,6 +144,6 @@ pub fn draw(frame: &mut Frame<'_>, app: &App) {
     draw_timeline(frame, app);
     draw_footer(frame, app);
     if app.show_help {
-        draw_help(frame, app);
+        draw_scrollable_help(frame, app);
     }
 }

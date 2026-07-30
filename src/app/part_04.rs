@@ -150,55 +150,67 @@ impl App {
     }
 
     fn frame_command(&mut self, rest: &str) {
-        match rest {
-            "add" | "new" => {
-                self.snapshot();
-                self.project.add_frame();
-                self.mark_dirty("Frame added");
-            }
-            "duplicate" | "dup" => {
-                self.snapshot();
-                self.project.duplicate_frame();
-                self.mark_dirty("Frame duplicated");
-            }
-            "delete" | "del" => {
-                self.snapshot();
-                if self.project.delete_active_frame() {
-                    self.mark_dirty("Frame deleted");
-                } else {
-                    self.discard_snapshot();
-                    self.status = "The final frame cannot be deleted".to_owned();
+        let (action, argument) = rest
+            .split_once(char::is_whitespace)
+            .map_or((rest, ""), |(action, argument)| (action, argument.trim()));
+        match action {
+            "" | "status" => self.status = self.frame_status(),
+            "add" | "new" => self.add_animation_frame(Some(argument)),
+            "duplicate" | "dup" => self.duplicate_animation_frame(Some(argument)),
+            "delete" | "del" => self.delete_animation_frame(),
+            "previous" | "prev" => self.previous_frame(),
+            "next" => self.next_frame(),
+            "first" | "start" => self.select_first_frame(),
+            "last" | "end" => self.select_last_frame(),
+            "select" => {
+                let Ok(index) = argument.parse::<usize>() else {
+                    self.status = "Usage: :frame select NUMBER".to_owned();
+                    return;
+                };
+                if index == 0 || !self.select_frame_index(index - 1) {
+                    self.status = format!("Frame must be 1..{}", self.project.frames.len());
                 }
             }
-            _ => self.status = "Usage: :frame add|duplicate|delete".to_owned(),
+            "rename" => self.rename_active_frame(argument),
+            "duration" | "delay" | "hold" => self.set_active_frame_duration(argument),
+            "state" => self.set_active_frame_state(argument),
+            "move" => self.move_active_frame(argument),
+            _ => {
+                self.status = "Usage: :frame add [name]|duplicate [name]|delete|previous|next|first|last|select N|rename NAME|duration MS|state STATE|move TARGET".to_owned();
+            }
         }
     }
 
     fn layer_command(&mut self, rest: &str) {
-        let (action, name) = rest
+        let (action, argument) = rest
             .split_once(char::is_whitespace)
-            .map_or((rest, ""), |(action, name)| (action, name.trim()));
+            .map_or((rest, ""), |(action, argument)| (action, argument.trim()));
         match action {
-            "add" | "new" => {
-                self.snapshot();
-                let name = if name.is_empty() {
-                    format!("Layer {}", self.project.canvas().layers.len() + 1)
-                } else {
-                    name.to_owned()
+            "" | "status" => self.status = self.layer_status(),
+            "add" | "new" => self.add_artwork_layer(Some(argument)),
+            "duplicate" | "dup" => self.duplicate_active_layer(Some(argument)),
+            "delete" | "del" => self.delete_active_layer(),
+            "previous" | "prev" => self.select_previous_layer(),
+            "next" => self.select_next_layer(),
+            "first" | "bottom" => self.select_first_layer(),
+            "last" | "top" => self.select_last_layer(),
+            "select" => {
+                let Ok(index) = argument.parse::<usize>() else {
+                    self.status = "Usage: :layer select NUMBER".to_owned();
+                    return;
                 };
-                self.project.canvas_mut().add_layer(name);
-                self.mark_dirty("Layer added");
-            }
-            "delete" | "del" => {
-                self.snapshot();
-                if self.project.canvas_mut().delete_active_layer() {
-                    self.mark_dirty("Layer deleted");
-                } else {
-                    self.discard_snapshot();
-                    self.status = "The final layer cannot be deleted".to_owned();
+                if index == 0 || !self.select_layer_index(index - 1) {
+                    self.status = format!("Layer must be 1..{}", self.project.canvas().layers.len());
                 }
             }
-            _ => self.status = "Usage: :layer add [name]|delete".to_owned(),
+            "rename" => self.rename_active_layer(argument),
+            "show" => self.set_active_layer_visibility(true),
+            "hide" => self.set_active_layer_visibility(false),
+            "toggle" | "visibility" => self.toggle_active_layer_visibility(),
+            "move" => self.move_active_layer(argument),
+            _ => {
+                self.status = "Usage: :layer add [name]|duplicate [name]|delete|previous|next|first|last|select N|rename NAME|show|hide|toggle|move up|down|top|bottom".to_owned();
+            }
         }
     }
 

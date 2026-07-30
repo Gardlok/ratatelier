@@ -69,43 +69,21 @@ impl App {
                 self.status = format!("Bold: {}", self.brush.style.bold);
             }
             KeyCode::Char('m') => self.toggle_canvas_mode(),
-            KeyCode::Char('a') => {
-                self.snapshot();
-                let name = format!("Layer {}", self.project.canvas().layers.len() + 1);
-                self.project.canvas_mut().add_layer(name);
-                self.mark_dirty("Layer added");
-            }
-            KeyCode::Char('A') => {
-                self.snapshot();
-                if self.project.canvas_mut().delete_active_layer() {
-                    self.mark_dirty("Layer deleted");
-                } else {
-                    self.discard_snapshot();
-                    self.status = "The final layer cannot be deleted".to_owned();
-                }
-            }
+            KeyCode::Char('a') => self.add_artwork_layer(None),
+            KeyCode::Char('A') => self.delete_active_layer(),
+            KeyCode::Char('D') => self.duplicate_active_layer(None),
+            KeyCode::Char('V') => self.toggle_active_layer_visibility(),
+            KeyCode::PageUp | KeyCode::Char('{') => self.select_previous_layer(),
+            KeyCode::PageDown | KeyCode::Char('}') => self.select_next_layer(),
             KeyCode::Char(',') => self.previous_frame(),
             KeyCode::Char('.') => self.next_frame(),
-            KeyCode::Char('n') => {
-                self.snapshot();
-                self.project.add_frame();
-                self.mark_dirty("Frame added");
-            }
-            KeyCode::Char('N') => {
-                self.snapshot();
-                self.project.duplicate_frame();
-                self.mark_dirty("Frame duplicated");
-            }
-            KeyCode::Char('X') => {
-                self.snapshot();
-                if self.project.delete_active_frame() {
-                    self.mark_dirty("Frame deleted");
-                    self.clamp_cursor();
-                } else {
-                    self.discard_snapshot();
-                    self.status = "The final frame cannot be deleted".to_owned();
-                }
-            }
+            KeyCode::Home => self.select_first_frame(),
+            KeyCode::End => self.select_last_frame(),
+            KeyCode::Char('<') => self.move_active_frame("left"),
+            KeyCode::Char('>') => self.move_active_frame("right"),
+            KeyCode::Char('n') => self.add_animation_frame(None),
+            KeyCode::Char('N') => self.duplicate_animation_frame(None),
+            KeyCode::Char('X') => self.delete_animation_frame(),
             KeyCode::Char('p') => self.toggle_playback(),
             KeyCode::Char('s') => self.cycle_widget_state(),
             KeyCode::Char('+') | KeyCode::Char('=') => self.adjust_duration(20),
@@ -248,25 +226,13 @@ impl App {
             KeyCode::Char('u') => self.undo(),
             KeyCode::Char(',') => self.previous_frame(),
             KeyCode::Char('.') => self.next_frame(),
-            KeyCode::Char('n') => {
-                self.snapshot();
-                self.project.add_frame();
-                self.mark_dirty("State frame added");
-            }
-            KeyCode::Char('N') => {
-                self.snapshot();
-                self.project.duplicate_frame();
-                self.mark_dirty("State frame duplicated");
-            }
-            KeyCode::Char('X') => {
-                self.snapshot();
-                if self.project.delete_active_frame() {
-                    self.mark_dirty("State frame deleted");
-                } else {
-                    self.discard_snapshot();
-                    self.status = "The final frame cannot be deleted".to_owned();
-                }
-            }
+            KeyCode::Home => self.select_first_frame(),
+            KeyCode::End => self.select_last_frame(),
+            KeyCode::Char('<') => self.move_active_frame("left"),
+            KeyCode::Char('>') => self.move_active_frame("right"),
+            KeyCode::Char('n') => self.add_animation_frame(None),
+            KeyCode::Char('N') => self.duplicate_animation_frame(None),
+            KeyCode::Char('X') => self.delete_animation_frame(),
             KeyCode::Char('p') => self.toggle_playback(),
             KeyCode::Char('s') => self.cycle_widget_state(),
             KeyCode::Char('+') | KeyCode::Char('=') => self.adjust_duration(20),

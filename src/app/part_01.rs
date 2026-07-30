@@ -93,6 +93,11 @@ impl App {
     }
 
     fn handle_key(&mut self, key: KeyEvent) {
+        if self.show_help {
+            self.handle_help_key(key);
+            return;
+        }
+
         if key.modifiers.contains(KeyModifiers::CONTROL) {
             match key.code {
                 KeyCode::Char('x') => {
@@ -108,13 +113,13 @@ impl App {
                     return;
                 }
                 KeyCode::Char('e') => {
+                    self.unfocus_inspector();
                     self.toggle_export_panel();
                     return;
                 }
                 KeyCode::Char('a') => {
                     if self.workspace == Workspace::Artwork
                         && self.mode != Mode::Command
-                        && !self.show_help
                         && !self.export_focused
                     {
                         self.select_all();
@@ -140,14 +145,12 @@ impl App {
         }
 
         if key.code == KeyCode::F(2) {
+            self.unfocus_inspector();
             self.toggle_export_panel();
             return;
         }
 
-        if self.show_help {
-            if matches!(key.code, KeyCode::Esc | KeyCode::Char('?') | KeyCode::F(1)) {
-                self.show_help = false;
-            }
+        if self.handle_inspector_key(key) {
             return;
         }
 
@@ -162,6 +165,8 @@ impl App {
 
         match key.code {
             KeyCode::F(1) | KeyCode::Char('?') => {
+                self.unfocus_inspector();
+                self.reset_help_scroll();
                 self.show_help = true;
                 return;
             }
@@ -173,6 +178,8 @@ impl App {
                 self.export_scroll = Point::default();
                 self.export_selection = None;
                 self.export_focused = false;
+                self.unfocus_inspector();
+                self.reset_inspector_scroll();
                 self.status = format!("{} workspace", self.workspace.label());
                 return;
             }
@@ -181,6 +188,7 @@ impl App {
                 self.command.clear();
                 self.reset_command_completion();
                 self.export_focused = false;
+                self.unfocus_inspector();
                 return;
             }
             KeyCode::Esc => {
@@ -190,6 +198,7 @@ impl App {
                 self.selection_drag = None;
                 self.pan_drag = None;
                 self.export_focused = false;
+                self.unfocus_inspector();
                 self.status = "Normal mode".to_owned();
                 return;
             }

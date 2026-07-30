@@ -168,8 +168,9 @@ fn draw_timeline(frame: &mut Frame<'_>, app: &App) {
         .enumerate()
         .map(|(index, animation_frame)| {
             format!(
-                " {} · {}ms · {} ",
+                " {}:{} · {}ms · {} ",
                 index + 1,
+                compact_frame_name(&animation_frame.name, 12),
                 animation_frame.duration_ms,
                 animation_frame.widget_state.label()
             )
@@ -197,14 +198,25 @@ fn draw_timeline(frame: &mut Frame<'_>, app: &App) {
     let playback = if app.is_playing() { "▶" } else { "■" };
     let active = app.project.active_frame + 1;
     let total = app.project.frames.len();
+    let frame_name = compact_frame_name(&app.project.frame().name, 20);
     frame.render_widget(
         Paragraph::new(Line::from(spans)).block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(format!(" Timeline {playback} · {active}/{total} ")),
+                .title(format!(" Timeline {playback} · {active}/{total} · {frame_name} ")),
         ),
         app.regions.timeline,
     );
+}
+
+fn compact_frame_name(name: &str, max_chars: usize) -> String {
+    let mut characters = name.chars();
+    let compact: String = characters.by_ref().take(max_chars).collect();
+    if characters.next().is_some() {
+        format!("{compact}…")
+    } else {
+        compact
+    }
 }
 
 fn timeline_visible_range(
@@ -272,7 +284,7 @@ fn draw_footer(frame: &mut Frame<'_>, app: &App) {
 }
 
 fn draw_help(frame: &mut Frame<'_>, app: &App) {
-    let area = centered_rect(78, 88, frame.area());
+    let area = centered_rect(82, 92, frame.area());
     frame.render_widget(Clear, area);
     let help = vec![
         Line::styled(
@@ -293,11 +305,16 @@ fn draw_help(frame: &mut Frame<'_>, app: &App) {
             "Selection: Ctrl-A all · y/Ctrl-C yank · x cut · p/P/Ctrl-V paste through system clipboard",
         ),
         Line::from("Ratatelier yanks retain styles · external text pastes with neutral styling"),
-        Line::from("Terminal paste accepts multiline external text · unsupported glyphs are skipped"),
-        Line::from("Mouse: left places/paints · drag selected cells to move · right drag pans"),
-        Line::from("Right click without dragging picks a glyph · wheel cycles glyphs"),
-        Line::from("n add frame · N duplicate · X delete · ,/. switch · p playback · s widget state"),
-        Line::from("a add layer · A delete layer · m ASCII/Unicode · c/C colors · b bold"),
+        Line::from("Mouse: left paints/selects · selected cells drag · right drag pans/picks"),
+        Line::from(""),
+        Line::styled("Layers", Style::default().fg(Color::LightGreen)),
+        Line::from("PgUp/{ previous · PgDn/} next · a add · A delete · D duplicate · V visibility"),
+        Line::from(":layer select N|rename NAME|show|hide|toggle|move up|down|top|bottom"),
+        Line::from(""),
+        Line::styled("Frames", Style::default().fg(Color::LightGreen)),
+        Line::from(",/. previous/next · Home/End first/last · </> reorder · n/N/X add/dup/delete"),
+        Line::from("+/- duration · p playback · s state · timeline follows the active frame"),
+        Line::from(":frame select N|rename NAME|duration MS|state STATE|move left|right|first|last"),
         Line::from(""),
         Line::styled("Components", Style::default().fg(Color::LightGreen)),
         Line::from("h/j/k/l move · H/J/K/L resize · [/] select · a add · x delete · t type"),
@@ -305,7 +322,7 @@ fn draw_help(frame: &mut Frame<'_>, app: &App) {
         Line::from(":title TITLE · :text TEXT · :value 0..100 · :widget add KIND"),
         Line::from(""),
         Line::styled("Command line", Style::default().fg(Color::LightGreen)),
-        Line::from("Tab/Shift-Tab completes commands, subcommands, directories, and files"),
+        Line::from("Tab/Shift-Tab completes commands, composition actions, directories, and files"),
         Line::from(""),
         Line::styled("Live export", Style::default().fg(Color::LightGreen)),
         Line::from("F2 or tool rail toggles · click to focus · drag to select · right click clears"),
