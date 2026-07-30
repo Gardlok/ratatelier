@@ -140,7 +140,7 @@ pub fn draw(frame: &mut Frame<'_>, app: &App) {
     }
     draw_toolbar(frame, app);
     draw_timeline(frame, app);
-    draw_footer(frame, app);
+    draw_context_footer(frame, app);
     if app.show_help {
         draw_scrollable_help(frame, app);
     }
