@@ -233,8 +233,16 @@ impl App {
                 self.command.pop();
                 self.reset_command_completion();
             }
-            KeyCode::Tab => self.complete_command(false),
-            KeyCode::BackTab => self.complete_command(true),
+            KeyCode::Tab => {
+                if !self.complete_palette_command(false) {
+                    self.complete_command(false);
+                }
+            }
+            KeyCode::BackTab => {
+                if !self.complete_palette_command(true) {
+                    self.complete_command(true);
+                }
+            }
             KeyCode::Char(character) => {
                 self.command.push(character);
                 self.reset_command_completion();
