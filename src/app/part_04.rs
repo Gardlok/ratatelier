@@ -22,6 +22,7 @@ impl App {
             }
             "e" | "export" => self.export_command(rest),
             "panel" | "tools" => self.toggle_export_panel(),
+            "palette" | "colors" | "colours" => self.toggle_palette(),
             "new" => self.new_command(rest),
             "resize" => self.resize_command(rest),
             "name" => {
