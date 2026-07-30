@@ -12,12 +12,14 @@ Think of it as mise en place for a TUI: shape, color, timing, and component stat
 
 - ASCII and terminal-safe Unicode canvases
 - Pencil, eraser, line, rectangle, and fill tools
+- A compact clickable color rail with reset and canvas sampling
 - A visible layer stack with navigation, visibility, duplication, naming, and ordering
 - Frame animation with names, exact timing, widget state, duplication, and ordering
 - Selections, system clipboard support, undo, and redo
-- A timeline that follows the active frame during navigation and playback
+- A clickable timeline that follows the active frame during navigation and playback
 - Block, paragraph, gauge, list, and sparkline mockups
 - Mouse painting, selection dragging, canvas panning, and component resizing
+- Context-aware footer hints instead of permanent inspector key maps
 - Command, subcommand, directory, and file completion
 - Versioned RON projects with atomic saves
 - Live Rust export plus artwork, component, animation, and plain-text exports
@@ -50,7 +52,7 @@ Inside the editor, `Tab` moves between the artwork and component benches. Press 
 
 Every animation frame owns a stack of artwork layers. Think of them as transparent sheets laid over one another: the bottom layer might hold a background, the next a subject, and the top layer highlights or effects. Painting and erasing change only the active layer, while the canvas displays the visible stack composited from top to bottom.
 
-The inspector title and summary always show the active layer index, name, and visibility. When space permits, the inspector also shows the surrounding layer stack:
+The inspector title always shows the active layer index. The scrollable inspector contains the complete stack, with visibility shown beneath it:
 
 ```text
   [x]  3 Highlights
@@ -69,6 +71,17 @@ The inspector title and summary always show the active layer index, name, and vi
 
 Layer order is bottom-to-top. Moving a layer **up** places it closer to the viewer; moving it **down** places it closer to the background. The active layer follows the move.
 
+## Color rail: one cell, no committee meeting
+
+The narrow color rail starts visible beside the work surface. Its inner width is one terminal cell, and it contains only swatches plus two special entries:
+
+- `×` resets the selected color channel;
+- `◉` arms a one-shot picker, then the next artwork-canvas click samples that channel.
+
+Press `c` to target foreground or `C` to target background. Click a swatch to apply it immediately and use the wheel when the terminal is too short to display every entry. `F3` or `:palette` hides or restores the rail.
+
+The same rail edits the selected widget's current-state style in the Components workspace. Canvas sampling remains an Artwork operation. Ratatelier intentionally keeps its existing named terminal palette; RGB and 256-color project storage are outside this release.
+
 ## Frames: content plus time
 
 A frame is more than a canvas snapshot. Each frame carries:
@@ -78,7 +91,7 @@ A frame is more than a canvas snapshot. Each frame carries:
 - a duration in milliseconds;
 - a widget state: `normal`, `focused`, `active`, or `disabled`.
 
-Use `,` and `.` to select frames. `Home` and `End` jump to the first and last frame. `<` and `>` move the active frame earlier or later in the animation while keeping it selected. `+` and `-` adjust the duration in 20 ms steps.
+Use `,` and `.` to select frames. `Home` and `End` jump to the first and last frame. `<` and `>` move the active frame earlier or later in the animation while keeping it selected. `+` and `-` adjust the duration in 20 ms steps. Visible timeline labels are also clickable, and the wheel over the timeline selects adjacent frames.
 
 Exact properties are available through commands:
 
@@ -107,12 +120,15 @@ On the artwork canvas:
 - Left drag paints, shapes, or extends a selection.
 - Drag an existing selection to move its cells.
 - Right drag grabs and pans a canvas larger than the window.
-- Right click without dragging picks the glyph and style under the pointer.
+- Right click without dragging picks the glyph and complete style under the pointer.
 - The wheel cycles the glyph palette.
+- After choosing `◉`, the next left click samples only the targeted foreground or background color.
+
+On the inspector, the wheel scrolls and clicking a layer selects it. On the timeline, clicking selects a visible frame and the wheel moves between frames. On the color rail, clicking applies a swatch and the wheel scrolls.
 
 On the component surface, left drag moves a widget and right drag resizes it.
 
-The live Rust pane can be opened or tucked away from the right-side tool rail. Click inside it to focus, drag to select text, and use the wheel or navigation keys to scroll.
+The live Rust pane starts hidden and can be opened or tucked away from the right-side tool rail. Click inside it to focus, drag to select text, and use the wheel or navigation keys to scroll.
 
 ## Essential controls
 
@@ -128,6 +144,8 @@ The live Rust pane can be opened or tucked away from the right-side tool rail. C
 | `1`..`5` | Pencil / eraser / line / rectangle / fill |
 | `Space` | Apply tool or set/commit a shape anchor |
 | `[` / `]` | Cycle brush glyph or selected widget |
+| `c` / `C` | Target foreground / background in the color rail |
+| `F3` | Toggle the compact color rail |
 | `PgUp` / `PgDn` | Previous / next artwork layer |
 | `{` / `}` | Previous / next artwork layer |
 | `a` / `A` / `D` / `V` | Add / delete / duplicate / toggle active layer |
@@ -144,6 +162,8 @@ The live Rust pane can be opened or tucked away from the right-side tool rail. C
 | `:` | Command mode |
 | `?` or `F1` | Open help; scroll with arrows, `j/k`, `PgUp/PgDn`, `g/G`, or the wheel |
 
+The footer's second line changes with the active mode or focused panel, so the most relevant controls remain visible without occupying the inspector.
+
 When help is open, `Home` or `g` jumps to the top, `End` or `G` jumps to the bottom, and `Esc`, `?`, or `F1` closes it.
 
 When the live export pane is focused, use `j/k`, the arrow keys, the mouse wheel, `PgUp/PgDn`, or `g/G`. Horizontal scrolling uses `h/l` or the left/right arrows. `Esc` returns focus to the editor.
@@ -158,6 +178,7 @@ When the live export pane is focused, use `j/k`, the arrow keys, the mouse wheel
 :scene 100x30                          resize component design surface
 :name Project Name                     rename project
 :glyph X                               set brush glyph
+:palette                               toggle compact color rail
 
 :frame                                 show active frame status
 :frame add [name]                      add a blank frame
@@ -195,7 +216,7 @@ When the live export pane is focused, use `j/k`, the arrow keys, the mouse wheel
 
 Ratatelier projects are human-readable RON. The format stores the artwork frames, layer stack, visibility, styles, timing, component scene, and widget states together, so a project can move between machines without a separate asset directory.
 
-The `0.2.0` application milestone does not change the project-file schema; existing version-1 RON projects remain the intended format. Unicode mode accepts printable single-cell glyphs. Wide glyph and grapheme-cluster editing remain outside the current format.
+The `0.2.1` interaction-polish release does not change the project-file schema; existing version-1 RON projects remain the intended format. Unicode mode accepts printable single-cell glyphs. Wide glyph and grapheme-cluster editing remain outside the current format.
 
 ## License
 
