@@ -19,11 +19,11 @@ impl App {
             selection: None,
             command: String::new(),
             command_hint: String::new(),
-            status: "Ready. Tab switches workspaces; ? opens help.".to_owned(),
+            status: "Ready. c/C chooses color; ? opens help.".to_owned(),
             dirty: false,
             running: true,
             show_help: false,
-            show_export: true,
+            show_export: false,
             export_focused: false,
             export_scroll: Point::default(),
             export_selection: None,
@@ -98,6 +98,11 @@ impl App {
             return;
         }
 
+        if self.color_pick_pending() && key.code == KeyCode::Esc {
+            self.cancel_color_pick();
+            return;
+        }
+
         if key.modifiers.contains(KeyModifiers::CONTROL) {
             match key.code {
                 KeyCode::Char('x') => {
@@ -147,6 +152,11 @@ impl App {
         if key.code == KeyCode::F(2) {
             self.unfocus_inspector();
             self.toggle_export_panel();
+            return;
+        }
+
+        if key.code == KeyCode::F(3) {
+            self.toggle_palette();
             return;
         }
 
