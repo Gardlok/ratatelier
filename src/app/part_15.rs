@@ -99,6 +99,52 @@ impl App {
         self.status = "Color picker cancelled".to_owned();
     }
 
+    fn complete_palette_command(&mut self, reverse: bool) -> bool {
+        if self.command.chars().any(char::is_whitespace)
+            || !(self.command.starts_with("pal") || self.command.starts_with("colo"))
+        {
+            return false;
+        }
+        let candidates: Vec<String> = ["palette ", "colors ", "colours "]
+            .into_iter()
+            .filter(|candidate| candidate.starts_with(&self.command))
+            .map(str::to_owned)
+            .collect();
+        if candidates.is_empty() {
+            return false;
+        }
+        let can_cycle = self.command_completion.as_ref().is_some_and(|completion| {
+            completion.candidates == candidates
+                && completion
+                    .candidates
+                    .get(completion.index)
+                    .is_some_and(|candidate| candidate == &self.command)
+        });
+        let index = if can_cycle {
+            let current = self
+                .command_completion
+                .as_ref()
+                .map_or(0, |completion| completion.index);
+            if reverse {
+                (current + candidates.len() - 1) % candidates.len()
+            } else {
+                (current + 1) % candidates.len()
+            }
+        } else if reverse {
+            candidates.len() - 1
+        } else {
+            0
+        };
+        self.command = candidates[index].clone();
+        self.command_hint = format!(
+            "Completion {}/{} · Tab next · Shift-Tab previous",
+            index + 1,
+            candidates.len()
+        );
+        self.command_completion = Some(CommandCompletion { candidates, index });
+        true
+    }
+
     fn scroll_palette(&self, delta: i32) {
         let maximum = ui::palette_scroll_limit(self, self.regions.palette);
         let current = i32::from(self.palette_scroll().min(maximum));
@@ -265,5 +311,16 @@ mod color_rail_tests {
         app.apply_palette_entry(1);
         assert!(app.sample_canvas_color(Point::new(1, 1)));
         assert_eq!(app.brush.style.bg, ColorSpec::Blue);
+    }
+
+    #[test]
+    fn palette_command_completion_handles_both_spellings() {
+        let mut app = App::new(Project::new("test", 4, 4), None);
+        app.command = "pal".to_owned();
+        assert!(app.complete_palette_command(false));
+        assert_eq!(app.command, "palette ");
+        app.command = "colo".to_owned();
+        assert!(app.complete_palette_command(false));
+        assert!(matches!(app.command.as_str(), "colors " | "colours "));
     }
 }
