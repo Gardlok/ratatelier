@@ -23,6 +23,7 @@ fn help_lines(app: &App) -> Vec<Line<'static>> {
         Line::styled("Layers", Style::default().fg(Color::LightGreen)),
         Line::from("PgUp/{ previous · PgDn/} next · a add · A delete · D duplicate · V visibility"),
         Line::from(":layer select N|rename NAME|show|hide|toggle|move up|down|top|bottom"),
+        Line::from("Inspector: wheel scrolls · click focuses/selects layers · j/k PgUp/PgDn g/G · Esc"),
         Line::from(""),
         Line::styled("Frames", Style::default().fg(Color::LightGreen)),
         Line::from(",/. previous/next · Home/End first/last · </> reorder · n/N/X add/dup/delete"),
