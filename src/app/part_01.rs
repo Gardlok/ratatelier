@@ -113,6 +113,7 @@ impl App {
                     return;
                 }
                 KeyCode::Char('e') => {
+                    self.unfocus_inspector();
                     self.toggle_export_panel();
                     return;
                 }
@@ -144,7 +145,12 @@ impl App {
         }
 
         if key.code == KeyCode::F(2) {
+            self.unfocus_inspector();
             self.toggle_export_panel();
+            return;
+        }
+
+        if self.handle_inspector_key(key) {
             return;
         }
 
@@ -159,6 +165,7 @@ impl App {
 
         match key.code {
             KeyCode::F(1) | KeyCode::Char('?') => {
+                self.unfocus_inspector();
                 self.reset_help_scroll();
                 self.show_help = true;
                 return;
@@ -171,6 +178,8 @@ impl App {
                 self.export_scroll = Point::default();
                 self.export_selection = None;
                 self.export_focused = false;
+                self.unfocus_inspector();
+                self.reset_inspector_scroll();
                 self.status = format!("{} workspace", self.workspace.label());
                 return;
             }
@@ -179,6 +188,7 @@ impl App {
                 self.command.clear();
                 self.reset_command_completion();
                 self.export_focused = false;
+                self.unfocus_inspector();
                 return;
             }
             KeyCode::Esc => {
@@ -188,6 +198,7 @@ impl App {
                 self.selection_drag = None;
                 self.pan_drag = None;
                 self.export_focused = false;
+                self.unfocus_inspector();
                 self.status = "Normal mode".to_owned();
                 return;
             }
