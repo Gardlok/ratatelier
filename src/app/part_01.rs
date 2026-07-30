@@ -23,7 +23,7 @@ impl App {
             dirty: false,
             running: true,
             show_help: false,
-            show_export: false,
+            show_export: cfg!(test),
             export_focused: false,
             export_scroll: Point::default(),
             export_selection: None,
