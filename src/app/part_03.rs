@@ -12,6 +12,14 @@ impl App {
             return;
         }
 
+        if self.handle_palette_mouse(mouse) {
+            return;
+        }
+
+        if self.handle_timeline_mouse(mouse) {
+            return;
+        }
+
         if matches!(mouse.kind, MouseEventKind::Down(MouseButton::Left))
             && region_contains(self.regions.toolbar, mouse.column, mouse.row)
         {
@@ -45,6 +53,9 @@ impl App {
                     return;
                 };
                 self.cursor = point;
+                if self.sample_canvas_color(point) {
+                    return;
+                }
                 if self.mode == Mode::Select {
                     self.begin_selection_drag(point);
                     return;
