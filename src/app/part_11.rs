@@ -19,6 +19,7 @@ impl App {
         self.selection = None;
         self.selection_drag = None;
         self.status = self.layer_status();
+        self.ensure_active_layer_visible();
         true
     }
 
@@ -55,6 +56,7 @@ impl App {
         self.snapshot();
         self.project.canvas_mut().add_layer(name.clone());
         self.mark_dirty(format!("Layer added: {name}"));
+        self.ensure_active_layer_visible();
     }
 
     fn duplicate_active_layer(&mut self, name: Option<&str>) {
@@ -73,6 +75,7 @@ impl App {
         };
         self.selection = None;
         self.mark_dirty(format!("Layer duplicated: {duplicate_name}"));
+        self.ensure_active_layer_visible();
     }
 
     fn delete_active_layer(&mut self) {
@@ -80,6 +83,7 @@ impl App {
         if self.project.canvas_mut().delete_active_layer() {
             self.selection = None;
             self.mark_dirty("Layer deleted");
+            self.ensure_active_layer_visible();
         } else {
             self.discard_snapshot();
             self.status = "The final layer cannot be deleted".to_owned();
@@ -149,6 +153,7 @@ impl App {
         };
         if moved {
             self.mark_dirty(format!("Layer moved {target}"));
+            self.ensure_active_layer_visible();
         } else {
             self.discard_snapshot();
             self.status = "Layer is already at that edge, or move target is invalid".to_owned();
