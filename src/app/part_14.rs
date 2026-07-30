@@ -1,17 +1,17 @@
-use std::cell::Cell as LocalCell;
+use std::cell::Cell as InspectorCell;
 
 thread_local! {
-    static INSPECTOR_SCROLL: LocalCell<u16> = const { LocalCell::new(0) };
-    static INSPECTOR_FOCUSED: LocalCell<bool> = const { LocalCell::new(false) };
+    static INSPECTOR_SCROLL: InspectorCell<u16> = const { InspectorCell::new(0) };
+    static INSPECTOR_FOCUSED: InspectorCell<bool> = const { InspectorCell::new(false) };
 }
 
 impl App {
     pub(crate) fn inspector_scroll(&self) -> u16 {
-        INSPECTOR_SCROLL.with(LocalCell::get)
+        INSPECTOR_SCROLL.with(InspectorCell::get)
     }
 
     pub(crate) fn inspector_focused(&self) -> bool {
-        INSPECTOR_FOCUSED.with(LocalCell::get)
+        INSPECTOR_FOCUSED.with(InspectorCell::get)
     }
 
     fn set_inspector_scroll(&self, value: u16) {
@@ -115,6 +115,30 @@ mod inspector_interaction_tests {
         app.handle_inspector_key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
         assert_eq!(app.cursor, cursor);
         assert!(app.inspector_scroll() > 0);
+        app.unfocus_inspector();
+        app.reset_inspector_scroll();
+    }
+
+    #[test]
+    fn clicking_a_rendered_layer_row_selects_that_layer() {
+        let mut app = App::new(Project::new("test", 4, 4), None);
+        app.project.canvas_mut().add_layer("Middle");
+        app.project.canvas_mut().add_layer("Top");
+        app.regions.inspector = Rect::new(0, 0, 26, 30);
+        app.reset_inspector_scroll();
+        let row = (1..app.regions.inspector.height - 1)
+            .find(|row| {
+                ui::inspector_layer_at(&app, app.regions.inspector, *row, 0) == Some(0)
+            })
+            .expect("bottom layer should have a rendered row");
+        app.handle_inspector_mouse(MouseEvent {
+            kind: MouseEventKind::Down(MouseButton::Left),
+            column: 2,
+            row,
+            modifiers: KeyModifiers::NONE,
+        });
+        assert_eq!(app.project.canvas().active_layer, 0);
+        assert!(app.inspector_focused());
         app.unfocus_inspector();
         app.reset_inspector_scroll();
     }
