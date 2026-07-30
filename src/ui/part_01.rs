@@ -64,15 +64,6 @@ fn artwork_inspector(app: &App) -> Vec<Line<'static>> {
         ),
         labeled("Duration", format!("{} ms", frame.duration_ms)),
         labeled("State", frame.widget_state.label()),
-        labeled(
-            "Layer",
-            format!(
-                "{}/{} · {} · {visibility}",
-                canvas.active_layer + 1,
-                canvas.layers.len(),
-                layer.name
-            ),
-        ),
         Line::from(""),
         labeled("Brush", format!("[{}]", app.brush.glyph)),
         labeled("Foreground", app.brush.style.fg.label()),
@@ -82,6 +73,8 @@ fn artwork_inspector(app: &App) -> Vec<Line<'static>> {
     ];
     lines.extend(layer_stack_lines(app, stack_capacity));
     lines.extend([
+        Line::from(""),
+        labeled("Visibility", visibility),
         Line::from(""),
         Line::styled("Composition controls", Style::default().fg(Color::DarkGray)),
         Line::from("PgUp/PgDn layer · ,/. frame"),
