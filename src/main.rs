@@ -5,9 +5,8 @@ use std::{
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use ratatelier::{
-    app, export, storage,
+    App, Project, app, export, storage,
     viewer::{self, ViewerOptions, ViewerSurface},
-    App, Project,
 };
 
 #[derive(Debug, Parser)]
