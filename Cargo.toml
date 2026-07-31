@@ -1,11 +1,13 @@
 [package]
 name = "ratatelier"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 rust-version = "1.85"
 description = "A terminal atelier for glyph art, Ratatui components, and animation"
 license = "MIT"
 repository = "https://github.com/Gardlok/ratatelier"
+homepage = "https://github.com/Gardlok/ratatelier"
+documentation = "https://docs.rs/ratatelier"
 readme = "README.md"
 keywords = ["ratatui", "tui", "ascii-art", "animation", "terminal"]
 categories = ["command-line-utilities", "graphics", "development-tools"]
