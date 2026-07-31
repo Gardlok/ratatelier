@@ -95,6 +95,12 @@ enum ExportFormat {
     RustComponent,
 }
 
+impl ExportFormat {
+    const fn supports_frame_selection(self) -> bool {
+        matches!(self, Self::Plain | Self::Ansi | Self::RustArt)
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     match cli.command {
@@ -132,10 +138,16 @@ fn run_view(args: ViewArgs) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn run_export(args: ExportArgs) -> Result<(), Box<dyn std::error::Error>> {
-    if args.format == ExportFormat::RustAnimation && args.frame.is_some() {
-        return Err(invalid_input(
-            "--frame cannot be combined with --format rust-animation because that format exports every frame",
-        )
+    if args.frame.is_some() && !args.format.supports_frame_selection() {
+        return Err(invalid_input(format!(
+            "--frame cannot be combined with --format {} because that format exports the complete {}",
+            args.format.possible_value().expect("value enum has a name").get_name(),
+            match args.format {
+                ExportFormat::RustAnimation => "animation",
+                ExportFormat::RustComponent => "component state set",
+                _ => unreachable!(),
+            }
+        ))
         .into());
     }
 
@@ -234,6 +246,15 @@ mod tests {
             panic!("export command was not parsed");
         };
         assert_eq!(args.format, ExportFormat::RustAnimation);
+    }
+
+    #[test]
+    fn only_artwork_formats_support_frame_selection() {
+        assert!(ExportFormat::Plain.supports_frame_selection());
+        assert!(ExportFormat::Ansi.supports_frame_selection());
+        assert!(ExportFormat::RustArt.supports_frame_selection());
+        assert!(!ExportFormat::RustAnimation.supports_frame_selection());
+        assert!(!ExportFormat::RustComponent.supports_frame_selection());
     }
 
     #[test]
