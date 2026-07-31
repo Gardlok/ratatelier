@@ -1,4 +1,4 @@
-const ARTWORK_LAYER_LINE_START: usize = 13;
+const ARTWORK_LAYER_LINE_START: usize = 14;
 
 fn draw_header(frame: &mut Frame<'_>, app: &App) {
     let tabs = Tabs::new(["Artwork", "Components"])
@@ -83,23 +83,44 @@ fn artwork_inspector(app: &App) -> Vec<Line<'static>> {
         labeled("Duration", format!("{} ms", frame.duration_ms)),
         labeled("State", frame.widget_state.label()),
         Line::from(""),
-        labeled("Brush", format!("[{}]", app.brush.glyph)),
+        styled_preview("Brush", &app.brush.glyph, &app.brush.style),
         labeled("Foreground", app.brush.style.fg.label()),
         labeled("Background", app.brush.style.bg.label()),
+        labeled("Attributes", style_attributes(&app.brush.style)),
         Line::from(""),
         Line::styled("Layers · top to bottom", Style::default().fg(Color::DarkGray)),
     ];
     lines.extend(layer_stack_lines(app, canvas.layers.len()));
-    lines.extend([
-        Line::from(""),
-        labeled("Visibility", visibility),
-        Line::from(""),
-        Line::styled("Composition controls", Style::default().fg(Color::DarkGray)),
-        Line::from("PgUp/PgDn layer · ,/. frame"),
-        Line::from("V visibility · D duplicate · </> reorder"),
-        Line::from(":layer / :frame full management"),
-    ]);
+    lines.extend([Line::from(""), labeled("Visibility", visibility)]);
     lines
+}
+
+fn styled_preview(label: &'static str, glyph: &str, style: &CellStyle) -> Line<'static> {
+    Line::from(vec![
+        Span::styled(format!("{label}: "), Style::default().fg(Color::DarkGray)),
+        Span::styled(format!("[{glyph}] Sample"), cell_style(style)),
+    ])
+}
+
+fn style_attributes(style: &CellStyle) -> String {
+    let mut attributes = Vec::new();
+    for (enabled, label) in [
+        (style.bold, "bold"),
+        (style.dim, "dim"),
+        (style.italic, "italic"),
+        (style.underlined, "underlined"),
+        (style.reversed, "reversed"),
+        (style.crossed_out, "crossed out"),
+    ] {
+        if enabled {
+            attributes.push(label);
+        }
+    }
+    if attributes.is_empty() {
+        "plain".to_owned()
+    } else {
+        attributes.join(", ")
+    }
 }
 
 fn layer_stack_lines(app: &App, capacity: usize) -> Vec<Line<'static>> {
@@ -165,6 +186,7 @@ fn component_inspector(app: &App) -> Vec<Line<'static>> {
         labeled("Widgets", scene.widgets.len().to_string()),
     ];
     if let Some(widget) = scene.widgets.get(app.component_selected) {
+        let style = widget.styles.for_state(frame.widget_state);
         lines.extend([
             labeled("Selected", format!("#{} {}", widget.id, widget.kind.label())),
             labeled(
@@ -176,25 +198,12 @@ fn component_inspector(app: &App) -> Vec<Line<'static>> {
             ),
             labeled("Title", widget.title.clone()),
             labeled("Value", widget.value.to_string()),
+            styled_preview("Preview", "◆", style),
+            labeled("Foreground", style.fg.label()),
+            labeled("Background", style.bg.label()),
+            labeled("Attributes", style_attributes(style)),
         ]);
     }
-    lines.extend([
-        Line::from(""),
-        Line::styled("Component controls", Style::default().fg(Color::DarkGray)),
-        Line::from("h j k l   move"),
-        Line::from("H J K L   resize"),
-        Line::from("[ ]       select"),
-        Line::from("a/x/t     add/del/type"),
-        Line::from("c/s       color/state"),
-        Line::from(",/.       frame select"),
-        Line::from("</>       frame reorder"),
-        Line::from("+/-       duration"),
-        Line::from("LMB drag  move"),
-        Line::from("RMB drag  resize"),
-        Line::from(":title …  title"),
-        Line::from(":text …   content"),
-        Line::from(":value N  gauge"),
-    ]);
     lines
 }
 

@@ -56,14 +56,8 @@ impl App {
             KeyCode::Char(' ') => self.apply_tool_at_cursor(),
             KeyCode::Char('[') => self.cycle_glyph(false),
             KeyCode::Char(']') => self.cycle_glyph(true),
-            KeyCode::Char('c') => {
-                self.brush.style.fg = self.brush.style.fg.next();
-                self.status = format!("Foreground: {}", self.brush.style.fg.label());
-            }
-            KeyCode::Char('C') => {
-                self.brush.style.bg = self.brush.style.bg.next();
-                self.status = format!("Background: {}", self.brush.style.bg.label());
-            }
+            KeyCode::Char('c') => self.activate_color_palette(ColorTarget::Foreground),
+            KeyCode::Char('C') => self.activate_color_palette(ColorTarget::Background),
             KeyCode::Char('b') => {
                 self.brush.style.bold = !self.brush.style.bold;
                 self.status = format!("Bold: {}", self.brush.style.bold);
@@ -202,27 +196,8 @@ impl App {
                     self.discard_snapshot();
                 }
             }
-            KeyCode::Char('c') => {
-                self.snapshot();
-                let state = self.project.frame().widget_state;
-                if let Some(widget) = self
-                    .project
-                    .components
-                    .widgets
-                    .get_mut(self.component_selected)
-                {
-                    let style = match state {
-                        crate::model::WidgetState::Normal => &mut widget.styles.normal,
-                        crate::model::WidgetState::Focused => &mut widget.styles.focused,
-                        crate::model::WidgetState::Active => &mut widget.styles.active,
-                        crate::model::WidgetState::Disabled => &mut widget.styles.disabled,
-                    };
-                    style.fg = style.fg.next();
-                    self.mark_dirty("Widget state color changed");
-                } else {
-                    self.discard_snapshot();
-                }
-            }
+            KeyCode::Char('c') => self.activate_color_palette(ColorTarget::Foreground),
+            KeyCode::Char('C') => self.activate_color_palette(ColorTarget::Background),
             KeyCode::Char('u') => self.undo(),
             KeyCode::Char(',') => self.previous_frame(),
             KeyCode::Char('.') => self.next_frame(),
@@ -258,8 +233,16 @@ impl App {
                 self.command.pop();
                 self.reset_command_completion();
             }
-            KeyCode::Tab => self.complete_command(false),
-            KeyCode::BackTab => self.complete_command(true),
+            KeyCode::Tab => {
+                if !self.complete_palette_command(false) {
+                    self.complete_command(false);
+                }
+            }
+            KeyCode::BackTab => {
+                if !self.complete_palette_command(true) {
+                    self.complete_command(true);
+                }
+            }
             KeyCode::Char(character) => {
                 self.command.push(character);
                 self.reset_command_completion();

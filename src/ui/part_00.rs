@@ -10,7 +10,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::{App, Mode, TextSelection, Workspace},
+    app::{App, ColorTarget, Mode, TextSelection, Workspace},
     export,
     model::{CellStyle, ColorSpec, Point, RectSpec, WidgetKind},
 };
@@ -20,6 +20,7 @@ pub struct UiRegions {
     pub header: Rect,
     pub inspector: Rect,
     pub workspace: Rect,
+    pub palette: Rect,
     pub code: Rect,
     pub code_inner: Rect,
     pub toolbar: Rect,
@@ -71,32 +72,25 @@ pub fn calculate_regions(area: Rect, app: &App) -> UiRegions {
             Constraint::Length(2),
         ])
         .split(area);
-    let body_constraints = if app.show_export {
-        vec![
-            Constraint::Length(26),
-            Constraint::Min(30),
-            Constraint::Length(42),
-            Constraint::Length(8),
-        ]
-    } else {
-        vec![
-            Constraint::Length(26),
-            Constraint::Min(30),
-            Constraint::Length(0),
-            Constraint::Length(8),
-        ]
-    };
+    let palette_width = if app.palette_visible() { 3 } else { 0 };
+    let code_width = if app.show_export { 42 } else { 0 };
     let body = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints(body_constraints)
+        .constraints([
+            Constraint::Length(26),
+            Constraint::Min(30),
+            Constraint::Length(palette_width),
+            Constraint::Length(code_width),
+            Constraint::Length(8),
+        ])
         .split(vertical[1]);
 
     let workspace_inner = body[1].inner(ratatui::layout::Margin {
         horizontal: 1,
         vertical: 1,
     });
-    let code_inner = if body[2].width > 2 && body[2].height > 2 {
-        body[2].inner(ratatui::layout::Margin {
+    let code_inner = if body[3].width > 2 && body[3].height > 2 {
+        body[3].inner(ratatui::layout::Margin {
             horizontal: 1,
             vertical: 1,
         })
@@ -117,9 +111,10 @@ pub fn calculate_regions(area: Rect, app: &App) -> UiRegions {
         header: vertical[0],
         inspector: body[0],
         workspace: body[1],
-        code: body[2],
+        palette: body[2],
+        code: body[3],
         code_inner,
-        toolbar: body[3],
+        toolbar: body[4],
         timeline: vertical[2],
         footer: vertical[3],
         help: centered_rect(82, 92, area),
@@ -137,12 +132,15 @@ pub fn draw(frame: &mut Frame<'_>, app: &App) {
         Workspace::Artwork => draw_artwork(frame, app),
         Workspace::Components => draw_components(frame, app),
     }
+    if app.palette_visible() {
+        draw_palette(frame, app);
+    }
     if app.show_export {
         draw_code(frame, app);
     }
     draw_toolbar(frame, app);
     draw_timeline(frame, app);
-    draw_footer(frame, app);
+    draw_context_footer(frame, app);
     if app.show_help {
         draw_scrollable_help(frame, app);
     }
