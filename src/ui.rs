@@ -5,3 +5,4 @@ include!("ui/part_03.rs");
 include!("ui/part_04.rs");
 include!("ui/part_05.rs");
 include!("ui/part_06.rs");
+include!("ui/part_07.rs");

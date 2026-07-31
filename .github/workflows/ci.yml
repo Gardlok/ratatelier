@@ -25,3 +25,31 @@ jobs:
         run: cargo clippy --all-targets --all-features
       - name: Tests
         run: cargo test --all-targets --all-features
+      - name: Documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --no-deps --all-features
+      - name: Package contents
+        run: cargo package --list
+      - name: Package
+        run: cargo package
+      - name: Install smoke test
+        run: |
+          cargo install --path . --root "$RUNNER_TEMP/ratatelier-install"
+          "$RUNNER_TEMP/ratatelier-install/bin/ratatelier" --version
+          "$RUNNER_TEMP/ratatelier-install/bin/ratatelier" --help >/dev/null
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.88.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: msrv-1.88.0
+      - name: Rust 1.88 check
+        run: cargo check --all-targets --all-features
+      - name: Rust 1.88 tests
+        run: cargo test --all-targets --all-features

@@ -101,17 +101,26 @@ impl App {
     }
 
     fn delete_selected_widget(&mut self) {
-        if self.project.components.widgets.is_empty() {
+        let Some(widget) = self.project.components.widgets.get(self.component_selected) else {
             self.status = "No widget selected".to_owned();
             return;
-        }
+        };
+        let name = if widget.title.trim().is_empty() {
+            widget.kind.label().to_owned()
+        } else {
+            widget.title.clone()
+        };
+        self.set_next_history_action(
+            format!("Restored widget \"{name}\""),
+            format!("Deleted widget \"{name}\""),
+        );
         self.snapshot();
         self.project
             .components
             .widgets
             .remove(self.component_selected);
         self.clamp_component_selection();
-        self.mark_dirty("Widget deleted");
+        self.mark_dirty(format!("Deleted widget \"{name}\" · u undo"));
     }
 
     fn select_next_widget(&mut self) {
