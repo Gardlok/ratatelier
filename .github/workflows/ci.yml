@@ -38,6 +38,8 @@ jobs:
           cargo install --path . --root "$RUNNER_TEMP/ratatelier-install"
           "$RUNNER_TEMP/ratatelier-install/bin/ratatelier" --version
           "$RUNNER_TEMP/ratatelier-install/bin/ratatelier" --help >/dev/null
+          "$RUNNER_TEMP/ratatelier-install/bin/ratatelier" view --help >/dev/null
+          "$RUNNER_TEMP/ratatelier-install/bin/ratatelier" export --help >/dev/null
 
   msrv:
     runs-on: ubuntu-latest

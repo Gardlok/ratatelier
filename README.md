@@ -4,7 +4,7 @@
 
 Terminal art usually starts life in the least artistic place imaginable: a Rust string full of escapes, spacing guesses, and crossed fingers.
 
-Ratatelier gives that work a bench of its own. Sketch the glyphs, arrange the widgets, test the motion, then carry the finished piece back into your application as RON, plain text, or generated Ratatui code.
+Ratatelier gives that work a bench of its own. Sketch the glyphs, arrange the widgets, test the motion, present the finished project, then carry it back into your application as RON, terminal text, or generated Ratatui code.
 
 Think of it as mise en place for a TUI: shape, color, timing, and component states laid out before the real cooking begins.
 
@@ -24,12 +24,14 @@ Think of it as mise en place for a TUI: shape, color, timing, and component stat
 - Session command history with unfinished-draft restoration
 - Named delete and undo feedback
 - An explicit Save / Discard / Cancel dialog for unsaved exit attempts
+- A minimal artwork and component viewer with automatic animation playback
+- Headless plain, ANSI, and generated-Rust conversion
 - Versioned RON projects with atomic saves
 - Live Rust export plus artwork, component, animation, and plain-text exports
 
 ## Start working
 
-Ratatelier `0.2.2` requires **Rust 1.88 or newer**. The exact Rust 1.88 toolchain is checked and tested in CI alongside current stable Rust.
+Ratatelier `0.3.0` requires **Rust 1.88 or newer**. The exact Rust 1.88 toolchain is checked and tested in CI alongside current stable Rust.
 
 Clone the repository and install the local package:
 
@@ -45,13 +47,53 @@ Start a new project:
 ratatelier --width 64 --height 20
 ```
 
-Open an existing project:
+Open an existing project in the editor:
 
 ```bash
 ratatelier artwork.ron
 ```
 
 Inside the editor, `Tab` moves between the artwork and component benches. Press `?` whenever the key map escapes your memory.
+
+## Edit, view, or convert
+
+Ratatelier uses the same RON project for all three workflows:
+
+```text
+ratatelier [PROJECT.ron]                 edit
+ratatelier view PROJECT.ron              present
+ratatelier export PROJECT.ron --format … convert
+```
+
+Open the minimal viewer:
+
+```bash
+ratatelier view artwork.ron
+```
+
+Animated projects begin playing from frame one and stop after one pass. Press `Space` to pause or resume, `r` to replay, and `q` or `Esc` to close. Continuous looping is explicit:
+
+```bash
+ratatelier view animation.ron --loop
+```
+
+The component surface uses each frame's widget state and timing:
+
+```bash
+ratatelier view dashboard.ron --surface components
+```
+
+Convert without opening either TUI:
+
+```bash
+ratatelier export artwork.ron --format plain
+ratatelier export artwork.ron --format ansi
+ratatelier export artwork.ron --format rust-art --output artwork.rs
+ratatelier export animation.ron --format rust-animation > animation.rs
+ratatelier export dashboard.ron --format rust-component > dashboard.rs
+```
+
+Headless conversion writes to standard output unless `--output` is supplied. Single-frame formats accept `--frame NUMBER`, `--frame first`, or `--frame last`. The complete command and format contract is documented in the [viewing and conversion guide](docs/PRESENTATION.md).
 
 ## Layers: transparent sheets, fewer regrets
 
@@ -231,13 +273,15 @@ When the live export pane is focused, use `j/k`, the arrow keys, the mouse wheel
 :q!                                    discard unsaved changes and quit
 ```
 
+The editor's `:export` command remains available for interactive work. The shell-level `ratatelier export` subcommand is the headless conversion interface and additionally supports ANSI output, stdout composition, explicit output paths, and frame selection.
+
 ## Project files
 
 Ratatelier projects are human-readable RON. The format stores the artwork frames, layer stack, visibility, styles, timing, component scene, and widget states together, so a project can move between machines without a separate asset directory.
 
-The `0.2.2` pre-publication safety release requires Rust 1.88 or newer but does not change the project-file schema; existing version-1 RON projects remain the intended format. Command history, dialog state, and descriptive undo metadata are editor-session state only. Unicode mode accepts printable single-cell glyphs. Wide glyph and grapheme-cluster editing remain outside the current format.
+The `0.3.0` presentation-and-conversion release requires Rust 1.88 or newer but does not change the project-file schema; existing version-1 RON projects remain the intended format. Viewer state and conversion options are not written into the project. Command history, dialog state, and descriptive undo metadata remain editor-session state only. Unicode mode accepts printable single-cell glyphs. Wide glyph and grapheme-cluster editing remain outside the current format.
 
-Release history is maintained in [CHANGELOG.md](CHANGELOG.md). The repository also includes a [publishing checklist](docs/PUBLISHING.md) and [demo-capture guide](docs/DEMO.md).
+Release history is maintained in [CHANGELOG.md](CHANGELOG.md). The repository also includes a [viewing and conversion guide](docs/PRESENTATION.md), [publishing checklist](docs/PUBLISHING.md), and [demo-capture guide](docs/DEMO.md).
 
 ## License
 

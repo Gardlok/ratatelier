@@ -7,6 +7,7 @@ pub mod geometry;
 pub mod model;
 pub mod storage;
 pub mod ui;
+pub mod viewer;
 
 pub use app::App;
 pub use model::Project;

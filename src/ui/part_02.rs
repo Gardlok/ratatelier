@@ -254,35 +254,6 @@ fn timeline_visible_range(
     (start, end)
 }
 
-fn draw_footer(frame: &mut Frame<'_>, app: &App) {
-    let content = if app.mode == Mode::Command {
-        vec![
-            Line::from(vec![
-                Span::styled(":", Style::default().fg(Color::LightCyan)),
-                Span::raw(app.command.as_str()),
-            ]),
-            Line::styled(
-                app.command_hint.as_str(),
-                Style::default().fg(Color::DarkGray),
-            ),
-        ]
-    } else {
-        vec![Line::from(vec![
-            Span::styled(
-                format!(" {} ", app.mode.label()),
-                Style::default()
-                    .fg(Color::Black)
-                    .bg(mode_color(app.mode))
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::raw(" "),
-            Span::styled(app.status.as_str(), Style::default().fg(Color::Gray)),
-            Span::raw("  │  Tab workspace  F2 export  ? help  Ctrl-S save  Ctrl-X quit"),
-        ])]
-    };
-    frame.render_widget(Paragraph::new(content), app.regions.footer);
-}
-
 fn draw_help(frame: &mut Frame<'_>, app: &App) {
     let area = centered_rect(82, 92, frame.area());
     frame.render_widget(Clear, area);

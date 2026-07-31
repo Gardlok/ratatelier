@@ -4,6 +4,35 @@ All notable changes to Ratatelier are documented here.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-31
+
+### Added
+
+- Minimal `ratatelier view PROJECT.ron` presentation mode.
+- Automatic one-pass playback for multi-frame projects.
+- Viewer pause, resume, replay, close, optional looping, and artwork/component surface selection.
+- Headless `ratatelier export PROJECT.ron --format FORMAT` conversion.
+- Standard-output conversion with optional direct file output.
+- One-based, first, and last frame selection for artwork exports.
+- Explicit rejection of frame selection for complete animation and component-state exports.
+- ANSI terminal export preserving colors and text modifiers.
+- Black-box CLI tests for conversion output and installed subcommand surfaces.
+- A viewing and conversion guide.
+
+### Changed
+
+- Generated Rust animation output is now a styled Ratatui widget instead of glyph-only string constants.
+- Generated animation output preserves exact frame durations, foregrounds, backgrounds, and modifiers.
+- Generated artwork retains styled spaces and background-only cells.
+- Generated component widgets honor normal, focused, active, and disabled styles.
+- Installed-package smoke tests now cover `view --help` and `export --help`.
+
+### Compatibility
+
+- Existing `ratatelier [PROJECT.ron]` usage remains editor mode.
+- The RON project schema remains unchanged.
+- Rust 1.88 or newer remains required.
+
 ## [0.2.2] - 2026-07-30
 
 ### Added
@@ -54,7 +83,8 @@ All notable changes to Ratatelier are documented here.
 - Scrollable inspector with clickable layer selection.
 - Scrollable in-app help.
 
-[Unreleased]: https://github.com/Gardlok/ratatelier/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/Gardlok/ratatelier/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Gardlok/ratatelier/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/Gardlok/ratatelier/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Gardlok/ratatelier/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Gardlok/ratatelier/releases/tag/v0.2.0
