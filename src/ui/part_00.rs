@@ -144,4 +144,7 @@ pub fn draw(frame: &mut Frame<'_>, app: &App) {
     if app.show_help {
         draw_scrollable_help(frame, app);
     }
+    if app.quit_prompt_open() {
+        draw_unsaved_exit(frame, app);
+    }
 }
