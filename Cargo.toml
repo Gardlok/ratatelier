@@ -2,7 +2,7 @@
 name = "ratatelier"
 version = "0.2.2"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 description = "A terminal atelier for glyph art, Ratatui components, and animation"
 license = "MIT"
 repository = "https://github.com/Gardlok/ratatelier"
