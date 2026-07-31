@@ -96,6 +96,16 @@ enum ExportFormat {
 }
 
 impl ExportFormat {
+    const fn label(self) -> &'static str {
+        match self {
+            Self::Plain => "plain",
+            Self::Ansi => "ansi",
+            Self::RustArt => "rust-art",
+            Self::RustAnimation => "rust-animation",
+            Self::RustComponent => "rust-component",
+        }
+    }
+
     const fn supports_frame_selection(self) -> bool {
         matches!(self, Self::Plain | Self::Ansi | Self::RustArt)
     }
@@ -139,14 +149,14 @@ fn run_view(args: ViewArgs) -> Result<(), Box<dyn std::error::Error>> {
 
 fn run_export(args: ExportArgs) -> Result<(), Box<dyn std::error::Error>> {
     if args.frame.is_some() && !args.format.supports_frame_selection() {
+        let complete_output = match args.format {
+            ExportFormat::RustAnimation => "animation",
+            ExportFormat::RustComponent => "component state set",
+            _ => unreachable!(),
+        };
         return Err(invalid_input(format!(
-            "--frame cannot be combined with --format {} because that format exports the complete {}",
-            args.format.possible_value().expect("value enum has a name").get_name(),
-            match args.format {
-                ExportFormat::RustAnimation => "animation",
-                ExportFormat::RustComponent => "component state set",
-                _ => unreachable!(),
-            }
+            "--frame cannot be combined with --format {} because that format exports the complete {complete_output}",
+            args.format.label()
         ))
         .into());
     }
