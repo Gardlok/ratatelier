@@ -13,6 +13,7 @@ All notable changes to Ratatelier are documented here.
 - Draft restoration after browsing command history.
 - Named delete and undo feedback for layers, frames, and component widgets.
 - Documentation, package-construction, and isolated installation checks in CI.
+- An exact Rust 1.88 MSRV check and test job.
 - A repeatable publishing checklist and demo-capture guide.
 
 ### Changed
@@ -21,11 +22,13 @@ All notable changes to Ratatelier are documented here.
 - Delete notifications identify the removed object and advertise `u` for immediate recovery.
 - Undoing or redoing a deletion identifies the restored or removed object.
 - Package metadata now advertises the project homepage and docs.rs documentation URL.
+- The declared minimum supported Rust version is now 1.88, matching Ratatui 0.30.2 and the dependency graph actually verified by CI.
 
 ### Compatibility
 
 - The RON project schema remains unchanged.
 - Command history and dialog state are editor-session state only.
+- Rust 1.88 or newer is required to build Ratatelier 0.2.2.
 
 ## [0.2.1] - 2026-07-30
 
