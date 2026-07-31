@@ -79,10 +79,17 @@ impl App {
     }
 
     fn delete_active_layer(&mut self) {
+        let name = self.project.canvas().layers[self.project.canvas().active_layer]
+            .name
+            .clone();
+        self.set_next_history_action(
+            format!("Restored layer \"{name}\""),
+            format!("Deleted layer \"{name}\""),
+        );
         self.snapshot();
         if self.project.canvas_mut().delete_active_layer() {
             self.selection = None;
-            self.mark_dirty("Layer deleted");
+            self.mark_dirty(format!("Deleted layer \"{name}\" · u undo"));
             self.ensure_active_layer_visible();
         } else {
             self.discard_snapshot();
@@ -229,5 +236,15 @@ mod layer_management_tests {
                 .glyph,
             "t"
         );
+    }
+
+    #[test]
+    fn deleting_and_undoing_names_the_layer() {
+        let mut app = App::new(Project::new("test", 4, 4), None);
+        app.add_artwork_layer(Some("Highlights"));
+        app.delete_active_layer();
+        assert!(app.status.contains("Highlights"));
+        app.undo();
+        assert!(app.status.contains("Restored layer \"Highlights\""));
     }
 }
