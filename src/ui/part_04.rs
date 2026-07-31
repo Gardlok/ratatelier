@@ -10,6 +10,7 @@ fn help_lines(app: &App) -> Vec<Line<'static>> {
         Line::from(
             "Global: Tab workspace · F2/Ctrl-E export · F3 palette · Ctrl-S save · Ctrl-X quit · : command",
         ),
+        Line::from("Unsaved exit: S saves · D discards · Esc cancels"),
         Line::from(""),
         Line::styled("Artwork", Style::default().fg(Color::LightGreen)),
         Line::from("h/j/k/l move · d draw · e erase · i insert · v select · u undo · Ctrl-R redo"),
@@ -42,6 +43,7 @@ fn help_lines(app: &App) -> Vec<Line<'static>> {
         Line::from(""),
         Line::styled("Command line", Style::default().fg(Color::LightGreen)),
         Line::from("Tab/Shift-Tab completes commands, actions, directories, and files"),
+        Line::from("Up/Down browses session command history and restores the unfinished draft"),
         Line::from(""),
         Line::styled("Live export", Style::default().fg(Color::LightGreen)),
         Line::from("F2 or tool rail toggles · click to focus · drag to select · right click clears"),
