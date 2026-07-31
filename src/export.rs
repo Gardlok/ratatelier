@@ -289,7 +289,7 @@ fn write_style_match_arm(output: &mut String, state: &str, style: &CellStyle) {
     writeln!(output, "            ComponentState::{state} => {{").unwrap();
     write_style_bindings(output, "                ", "style", style);
     writeln!(output, "                style").unwrap();
-    writeln!(output, "            }},").unwrap();
+    writeln!(output, "            }}").unwrap();
 }
 
 fn export_widget(output: &mut String, widget: &WidgetSpec) {
