@@ -28,13 +28,7 @@ pub fn export_animation(project: &Project) -> String {
     write_ratatui_imports(&mut output, false);
     writeln!(output, "pub const FRAME_DURATIONS_MS: &[u64] = &[").unwrap();
     for (index, frame) in project.frames.iter().enumerate() {
-        writeln!(
-            output,
-            "    {}, // frame {}",
-            frame.duration_ms,
-            index + 1
-        )
-        .unwrap();
+        writeln!(output, "    {}, // frame {}", frame.duration_ms, index + 1).unwrap();
     }
     writeln!(output, "];\n").unwrap();
     writeln!(
@@ -252,24 +246,14 @@ fn write_canvas_render_body(output: &mut String, canvas: &Canvas, indent: usize)
                 "{padding}    let cell = &mut buf[(origin_x + {x}, origin_y + {y})];"
             )
             .unwrap();
-            writeln!(
-                output,
-                "{padding}    cell.set_symbol({:?});",
-                cell.glyph
-            )
-            .unwrap();
+            writeln!(output, "{padding}    cell.set_symbol({:?});", cell.glyph).unwrap();
             writeln!(output, "{padding}    cell.set_style(style);").unwrap();
             writeln!(output, "{padding}}}").unwrap();
         }
     }
 }
 
-fn write_style_bindings(
-    output: &mut String,
-    padding: &str,
-    variable: &str,
-    style: &CellStyle,
-) {
+fn write_style_bindings(output: &mut String, padding: &str, variable: &str, style: &CellStyle) {
     writeln!(output, "{padding}let {variable} = Style::default();").unwrap();
     writeln!(
         output,
@@ -333,7 +317,12 @@ fn export_widget(output: &mut String, widget: &WidgetSpec) {
         widget.id, widget.title
     )
     .unwrap();
-    writeln!(output, "        let block_{} = Block::default();", widget.id).unwrap();
+    writeln!(
+        output,
+        "        let block_{} = Block::default();",
+        widget.id
+    )
+    .unwrap();
     writeln!(
         output,
         "        let block_{} = block_{}.borders(Borders::ALL);",
@@ -383,7 +372,12 @@ fn export_widget(output: &mut String, widget: &WidgetSpec) {
             .unwrap();
         }
         WidgetKind::Gauge => {
-            writeln!(output, "        let widget_{} = Gauge::default();", widget.id).unwrap();
+            writeln!(
+                output,
+                "        let widget_{} = Gauge::default();",
+                widget.id
+            )
+            .unwrap();
             writeln!(
                 output,
                 "        let widget_{} = widget_{}.block(block_{});",
@@ -406,14 +400,14 @@ fn export_widget(output: &mut String, widget: &WidgetSpec) {
             .unwrap();
         }
         WidgetKind::List => {
-            writeln!(
-                output,
-                "        let mut items_{} = Vec::new();",
-                widget.id
-            )
-            .unwrap();
+            writeln!(output, "        let mut items_{} = Vec::new();", widget.id).unwrap();
             for line in widget.text.lines() {
-                writeln!(output, "        items_{}.push({line:?});", widget.id).unwrap();
+                writeln!(
+                    output,
+                    "        items_{}.push({line:?});",
+                    widget.id
+                )
+                .unwrap();
             }
             writeln!(
                 output,
@@ -605,17 +599,38 @@ mod tests {
             std::process::id()
         ));
         fs::write(&path, source).expect("generated source fixture should write");
-        let result = Command::new("rustfmt")
-            .arg("--check")
-            .arg(&path)
-            .status();
-        let _ = fs::remove_file(&path);
 
-        match result {
-            Ok(status) => assert!(status.success(), "{label} export was not rustfmt-clean"),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-            Err(error) => panic!("failed to run rustfmt for {label}: {error}"),
+        let mut version_command = Command::new("rustfmt");
+        version_command.arg("--version");
+        let availability = match version_command.output() {
+            Ok(output) => output,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                let _ = fs::remove_file(&path);
+                return;
+            }
+            Err(error) => {
+                let _ = fs::remove_file(&path);
+                panic!("failed to check rustfmt for {label}: {error}");
+            }
+        };
+        if !availability.status.success() {
+            let stderr = String::from_utf8_lossy(&availability.stderr);
+            if stderr.contains("not installed for the toolchain") {
+                let _ = fs::remove_file(&path);
+                return;
+            }
+            let _ = fs::remove_file(&path);
+            panic!("rustfmt availability check failed for {label}: {stderr}");
         }
+
+        let mut check_command = Command::new("rustfmt");
+        check_command.arg("--check");
+        check_command.arg(&path);
+        let status = check_command
+            .status()
+            .expect("rustfmt availability was already verified");
+        let _ = fs::remove_file(&path);
+        assert!(status.success(), "{label} export was not rustfmt-clean");
     }
 
     #[test]
