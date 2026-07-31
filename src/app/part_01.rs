@@ -103,6 +103,15 @@ impl App {
             return;
         }
 
+        if self.workspace == Workspace::Artwork
+            && self.mode != Mode::Command
+            && key.code == KeyCode::Char(' ')
+            && self.take_color_commit_pending()
+        {
+            self.apply_tool_at_cursor();
+            return;
+        }
+
         if key.modifiers.contains(KeyModifiers::CONTROL) {
             match key.code {
                 KeyCode::Char('x') => {
