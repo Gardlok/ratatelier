@@ -13,7 +13,8 @@ All notable changes to Ratatelier are documented here.
 - Viewer pause, resume, replay, close, optional looping, and artwork/component surface selection.
 - Headless `ratatelier export PROJECT.ron --format FORMAT` conversion.
 - Standard-output conversion with optional direct file output.
-- One-based, first, and last frame selection for single-frame and component exports.
+- One-based, first, and last frame selection for artwork exports.
+- Explicit rejection of frame selection for complete animation and component-state exports.
 - ANSI terminal export preserving colors and text modifiers.
 - Black-box CLI tests for conversion output and installed subcommand surfaces.
 - A viewing and conversion guide.
