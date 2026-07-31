@@ -11,7 +11,11 @@ pub fn export_art(project: &Project) -> String {
     write_ratatui_imports(&mut output, false);
     writeln!(output, "pub struct {type_name};\n").unwrap();
     writeln!(output, "impl Widget for {type_name} {{").unwrap();
-    writeln!(output, "    fn render(self, area: Rect, buf: &mut Buffer) {{").unwrap();
+    writeln!(
+        output,
+        "    fn render(self, area: Rect, buf: &mut Buffer) {{"
+    )
+    .unwrap();
     write_canvas_render_body(&mut output, project.canvas(), 8);
     writeln!(output, "    }}").unwrap();
     writeln!(output, "}}").unwrap();
@@ -37,7 +41,11 @@ pub fn export_animation(project: &Project) -> String {
     .unwrap();
     writeln!(output, "pub struct {type_name} {{ pub frame: usize }}\n").unwrap();
     writeln!(output, "impl Widget for {type_name} {{").unwrap();
-    writeln!(output, "    fn render(self, area: Rect, buf: &mut Buffer) {{").unwrap();
+    writeln!(
+        output,
+        "    fn render(self, area: Rect, buf: &mut Buffer) {{"
+    )
+    .unwrap();
     writeln!(output, "        match self.frame % FRAME_COUNT {{").unwrap();
     for index in 0..project.frames.len() {
         writeln!(
@@ -80,7 +88,11 @@ pub fn export_component(project: &Project) -> String {
     )
     .unwrap();
     writeln!(output, "impl Widget for {type_name} {{").unwrap();
-    writeln!(output, "    fn render(self, area: Rect, buf: &mut Buffer) {{").unwrap();
+    writeln!(
+        output,
+        "    fn render(self, area: Rect, buf: &mut Buffer) {{"
+    )
+    .unwrap();
     writeln!(output, "        let scale = |rect: Rect| -> Rect {{").unwrap();
     writeln!(
         output,
