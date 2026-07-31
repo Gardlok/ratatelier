@@ -402,12 +402,7 @@ fn export_widget(output: &mut String, widget: &WidgetSpec) {
         WidgetKind::List => {
             writeln!(output, "        let mut items_{} = Vec::new();", widget.id).unwrap();
             for line in widget.text.lines() {
-                writeln!(
-                    output,
-                    "        items_{}.push({line:?});",
-                    widget.id
-                )
-                .unwrap();
+                writeln!(output, "        items_{}.push({line:?});", widget.id).unwrap();
             }
             writeln!(
                 output,
