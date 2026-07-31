@@ -41,6 +41,7 @@ impl App {
         COLOR_PICK_PENDING.with(PaletteStateCell::get)
     }
 
+    #[cfg(test)]
     fn color_commit_pending(&self) -> bool {
         COLOR_COMMIT_PENDING.with(PaletteStateCell::get)
     }
