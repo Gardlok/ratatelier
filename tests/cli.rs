@@ -76,18 +76,20 @@ fn ansi_export_preserves_terminal_style() {
 }
 
 #[test]
-fn animation_export_rejects_single_frame_selection() {
-    let path = save_fixture("animation");
-    let output = Command::new(env!("CARGO_BIN_EXE_ratatelier"))
-        .arg("export")
-        .arg(&path)
-        .args(["--format", "rust-animation", "--frame", "1"])
-        .output()
-        .expect("ratatelier export should run");
-    let _ = fs::remove_file(path);
+fn complete_project_exports_reject_frame_selection() {
+    for format in ["rust-animation", "rust-component"] {
+        let path = save_fixture(format);
+        let output = Command::new(env!("CARGO_BIN_EXE_ratatelier"))
+            .arg("export")
+            .arg(&path)
+            .args(["--format", format, "--frame", "1"])
+            .output()
+            .expect("ratatelier export should run");
+        let _ = fs::remove_file(path);
 
-    assert!(!output.status.success());
-    assert!(String::from_utf8_lossy(&output.stderr).contains("cannot be combined"));
+        assert!(!output.status.success());
+        assert!(String::from_utf8_lossy(&output.stderr).contains("cannot be combined"));
+    }
 }
 
 #[test]
