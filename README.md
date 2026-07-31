@@ -21,6 +21,9 @@ Think of it as mise en place for a TUI: shape, color, timing, and component stat
 - Mouse painting, selection dragging, canvas panning, and component resizing
 - Context-aware footer hints instead of permanent inspector key maps
 - Command, subcommand, directory, and file completion
+- Session command history with unfinished-draft restoration
+- Named delete and undo feedback
+- An explicit Save / Discard / Cancel dialog for unsaved exit attempts
 - Versioned RON projects with atomic saves
 - Live Rust export plus artwork, component, animation, and plain-text exports
 
@@ -110,7 +113,19 @@ Selections use a long-lived system clipboard provider, so copied text remains av
 
 Text copied from another application is pasted with neutral cell styling. It does not inherit the active brush, because clipboard text and brush paint are separate ingredients. Terminal paste events and `Ctrl-v` accept multiline text; unsupported or double-width glyphs are skipped when the canvas mode cannot represent them.
 
-In command mode, `Tab` and `Shift-Tab` cycle matching commands, composition actions, directories, and files. Path completion lists directories first and keeps walking as `/` is added.
+In command mode, `Tab` and `Shift-Tab` cycle matching commands, composition actions, directories, and files. Path completion lists directories first and keeps walking as `/` is added. `Up` and `Down` browse commands entered during the current editor session. When navigation returns past the newest history entry, Ratatelier restores the unfinished command draft that was present before browsing began.
+
+## Safe exit and recoverable deletes
+
+`Ctrl-X` and `:q` exit immediately when the project is clean. With unsaved changes, Ratatelier opens a blocking dialog instead of relying on a status-line warning:
+
+- `S` or `Enter` saves and exits;
+- `D` exits without saving;
+- `Esc` or `C` cancels and returns to the editor.
+
+A failed save leaves the dialog open and preserves the project in memory. `:q!` remains the explicit command-line bypass.
+
+Deleting a layer, frame, or component widget identifies the removed object and advertises `u` for recovery. Undo and redo also identify the restored or removed object, making destructive edits easier to verify without adding confirmation prompts to ordinary work.
 
 ## Mouse controls
 
@@ -136,6 +151,7 @@ The live Rust pane starts hidden and can be opened or tucked away from the right
 | --- | --- |
 | `Tab` | Switch Artwork / Components; complete commands in command mode |
 | `Shift-Tab` | Previous command completion |
+| `Up` / `Down` | Browse session command history in command mode |
 | `h j k l` | Move cursor, widget, or focused export pane |
 | `d` / `e` / `i` / `v` | Draw / erase / insert / select mode |
 | `Ctrl-a` | Select the entire artwork canvas |
@@ -158,7 +174,7 @@ The live Rust pane starts hidden and can be opened or tucked away from the right
 | `u` / `Ctrl-r` | Undo / redo |
 | `F2` or `Ctrl-e` | Toggle the live Rust pane |
 | `Ctrl-s` | Save |
-| `Ctrl-x` | Quit, warning about unsaved work |
+| `Ctrl-x` | Exit or open the unsaved-changes dialog |
 | `:` | Command mode |
 | `?` or `F1` | Open help; scroll with arrows, `j/k`, `PgUp/PgDn`, `g/G`, or the wheel |
 
@@ -209,6 +225,7 @@ When the live export pane is focused, use `j/k`, the arrow keys, the mouse wheel
 :export [path]                         export current workspace as Rust
 :export art|plain|animation|component [path]
 :wq                                    save and quit
+:q                                     exit or open the unsaved-changes dialog
 :q!                                    discard unsaved changes and quit
 ```
 
@@ -216,7 +233,9 @@ When the live export pane is focused, use `j/k`, the arrow keys, the mouse wheel
 
 Ratatelier projects are human-readable RON. The format stores the artwork frames, layer stack, visibility, styles, timing, component scene, and widget states together, so a project can move between machines without a separate asset directory.
 
-The `0.2.1` interaction-polish release does not change the project-file schema; existing version-1 RON projects remain the intended format. Unicode mode accepts printable single-cell glyphs. Wide glyph and grapheme-cluster editing remain outside the current format.
+The `0.2.2` pre-publication safety release does not change the project-file schema; existing version-1 RON projects remain the intended format. Command history, dialog state, and descriptive undo metadata are editor-session state only. Unicode mode accepts printable single-cell glyphs. Wide glyph and grapheme-cluster editing remain outside the current format.
+
+Release history is maintained in [CHANGELOG.md](CHANGELOG.md). The repository also includes a [publishing checklist](docs/PUBLISHING.md) and [demo-capture guide](docs/DEMO.md).
 
 ## License
 
