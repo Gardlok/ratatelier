@@ -103,19 +103,19 @@ A generated Ratatui component widget with normal, focused, active, and disabled 
 ratatelier export project.ron --format rust-component --output component.rs
 ```
 
-The selected project frame determines the state displayed by the viewer. The generated Rust component exposes its own `ComponentState` value so the embedding application can select a state directly.
+The selected project frame determines the state displayed by the viewer. Generated Rust components instead expose their complete `ComponentState` set so the embedding application can select a state directly. For that reason, `rust-component` also rejects `--frame` rather than accepting an option that would not change the generated code.
 
 ## Frame selection
 
-Single-frame and component exports accept a one-based frame number, `first`, or `last`:
+Artwork formats accept a one-based frame number, `first`, or `last`:
 
 ```bash
 ratatelier export animation.ron --format plain --frame 3
 ratatelier export animation.ron --format ansi --frame first
-ratatelier export component.ron --format rust-component --frame last
+ratatelier export animation.ron --format rust-art --frame last
 ```
 
-Without `--frame`, conversion uses the active frame stored in the project.
+Without `--frame`, these formats use the active frame stored in the project. Full `rust-animation` and `rust-component` exports intentionally reject frame selection because they preserve the complete animation or component-state set.
 
 ## Editor compatibility
 
