@@ -21,6 +21,7 @@ thread_local! {
     static PALETTE_SCROLL: PaletteStateCell<u16> = const { PaletteStateCell::new(0) };
     static COLOR_TARGET: PaletteStateCell<ColorTarget> = const { PaletteStateCell::new(ColorTarget::Foreground) };
     static COLOR_PICK_PENDING: PaletteStateCell<bool> = const { PaletteStateCell::new(false) };
+    static COLOR_COMMIT_PENDING: PaletteStateCell<bool> = const { PaletteStateCell::new(false) };
 }
 
 impl App {
@@ -38,6 +39,10 @@ impl App {
 
     pub(crate) fn color_pick_pending(&self) -> bool {
         COLOR_PICK_PENDING.with(PaletteStateCell::get)
+    }
+
+    fn color_commit_pending(&self) -> bool {
+        COLOR_COMMIT_PENDING.with(PaletteStateCell::get)
     }
 
     pub(crate) fn current_target_color(&self) -> ColorSpec {
@@ -75,6 +80,18 @@ impl App {
         COLOR_PICK_PENDING.with(|state| state.set(pending));
     }
 
+    fn set_color_commit_pending(&self, pending: bool) {
+        COLOR_COMMIT_PENDING.with(|state| state.set(pending));
+    }
+
+    fn take_color_commit_pending(&self) -> bool {
+        COLOR_COMMIT_PENDING.with(|state| {
+            let pending = state.get();
+            state.set(false);
+            pending
+        })
+    }
+
     fn toggle_palette(&mut self) {
         let visible = !self.palette_visible();
         self.set_palette_visible(visible);
@@ -87,6 +104,8 @@ impl App {
 
     fn activate_color_palette(&mut self, target: ColorTarget) {
         self.set_color_target(target);
+        self.set_color_pick_pending(false);
+        self.set_color_commit_pending(false);
         self.set_palette_visible(true);
         self.status = format!(
             "Color rail targets {}; click a swatch, × resets, ◉ samples the canvas",
@@ -96,6 +115,7 @@ impl App {
 
     fn cancel_color_pick(&mut self) {
         self.set_color_pick_pending(false);
+        self.set_color_commit_pending(false);
         self.status = "Color picker cancelled".to_owned();
     }
 
@@ -160,7 +180,12 @@ impl App {
                     ColorTarget::Foreground => self.brush.style.fg = color,
                     ColorTarget::Background => self.brush.style.bg = color,
                 }
-                self.status = format!("Brush {}: {}", target.label(), color.label());
+                self.set_color_commit_pending(true);
+                self.status = format!(
+                    "Brush {}: {} · Space applies once",
+                    target.label(),
+                    color.label()
+                );
             }
             Workspace::Components => {
                 let state = self.project.frame().widget_state;
@@ -199,6 +224,7 @@ impl App {
         match entry {
             0 => self.apply_target_color(ColorSpec::Reset),
             1 if self.workspace == Workspace::Artwork => {
+                self.set_color_commit_pending(false);
                 self.set_color_pick_pending(true);
                 self.status = format!(
                     "Click the canvas to sample its {} color; Esc cancels",
@@ -290,6 +316,7 @@ mod color_rail_tests {
         app.dirty = false;
         app.apply_palette_entry(2);
         assert_eq!(app.brush.style.fg, ColorSpec::White);
+        assert!(app.color_commit_pending());
         assert!(!app.dirty);
     }
 
@@ -311,6 +338,7 @@ mod color_rail_tests {
         app.apply_palette_entry(1);
         assert!(app.sample_canvas_color(Point::new(1, 1)));
         assert_eq!(app.brush.style.bg, ColorSpec::Blue);
+        assert!(app.color_commit_pending());
     }
 
     #[test]
