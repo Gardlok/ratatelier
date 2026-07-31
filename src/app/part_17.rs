@@ -117,7 +117,7 @@ impl App {
         self.begin_command_history();
     }
 
-    fn detach_command_history(&self) {
+    fn detach_command_history(&mut self) {
         let was_browsing = COMMAND_HISTORY_INDEX.with(SafetyCell::get).is_some();
         if was_browsing {
             COMMAND_HISTORY_INDEX.with(|index| index.set(None));
