@@ -1,6 +1,7 @@
 impl App {
     #[must_use]
     pub fn new(project: Project, current_path: Option<PathBuf>) -> Self {
+        reset_prepublish_state();
         Self {
             project,
             current_path,
@@ -81,6 +82,15 @@ impl App {
     }
 
     pub fn handle_event(&mut self, event: Event) {
+        if self.quit_prompt_open() {
+            if let Event::Key(key) = event {
+                if matches!(key.kind, KeyEventKind::Press | KeyEventKind::Repeat) {
+                    self.handle_quit_prompt_key(key);
+                }
+            }
+            return;
+        }
+
         match event {
             Event::Key(key) if matches!(key.kind, KeyEventKind::Press | KeyEventKind::Repeat) => {
                 self.handle_key(key);
@@ -178,6 +188,9 @@ impl App {
         }
 
         if self.mode == Mode::Command {
+            if self.prepare_command_history_key(key) {
+                return;
+            }
             self.handle_command_key(key);
             return;
         }
@@ -206,6 +219,7 @@ impl App {
                 self.mode = Mode::Command;
                 self.command.clear();
                 self.reset_command_completion();
+                self.begin_command_history();
                 self.export_focused = false;
                 self.unfocus_inspector();
                 return;
