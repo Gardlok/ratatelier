@@ -33,8 +33,11 @@ impl App {
     }
 
     fn request_quit(&mut self, force: bool) {
-        if self.dirty && !force {
-            self.status = "Unsaved changes. Use :w, :wq, or :q!.".to_owned();
+        if force {
+            self.close_quit_prompt();
+            self.running = false;
+        } else if self.dirty {
+            self.open_quit_prompt();
         } else {
             self.running = false;
         }
@@ -42,14 +45,17 @@ impl App {
 
     fn snapshot(&mut self) {
         self.history.push(self.project.clone());
+        push_undo_action(take_next_history_action());
         if self.history.len() > HISTORY_LIMIT {
             self.history.remove(0);
+            trim_undo_actions();
         }
         self.future.clear();
     }
 
     fn discard_snapshot(&mut self) {
         self.history.pop();
+        discard_undo_action();
     }
 
     fn undo(&mut self) {
@@ -58,7 +64,10 @@ impl App {
             self.dirty = true;
             self.clamp_cursor();
             self.clamp_component_selection();
-            self.status = "Undo".to_owned();
+            self.status = move_undo_action_to_redo().map_or_else(
+                || "Undo".to_owned(),
+                |action| format!("{} · Ctrl-R redo", action.undo_status),
+            );
         } else {
             self.status = "Nothing to undo".to_owned();
         }
@@ -70,7 +79,10 @@ impl App {
             self.dirty = true;
             self.clamp_cursor();
             self.clamp_component_selection();
-            self.status = "Redo".to_owned();
+            self.status = move_redo_action_to_undo().map_or_else(
+                || "Redo".to_owned(),
+                |action| format!("{} · u undo", action.redo_status),
+            );
         } else {
             self.status = "Nothing to redo".to_owned();
         }
