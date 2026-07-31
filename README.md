@@ -29,6 +29,8 @@ Think of it as mise en place for a TUI: shape, color, timing, and component stat
 
 ## Start working
 
+Ratatelier `0.2.2` requires **Rust 1.88 or newer**. The exact Rust 1.88 toolchain is checked and tested in CI alongside current stable Rust.
+
 Clone the repository and install the local package:
 
 ```bash
@@ -233,7 +235,7 @@ When the live export pane is focused, use `j/k`, the arrow keys, the mouse wheel
 
 Ratatelier projects are human-readable RON. The format stores the artwork frames, layer stack, visibility, styles, timing, component scene, and widget states together, so a project can move between machines without a separate asset directory.
 
-The `0.2.2` pre-publication safety release does not change the project-file schema; existing version-1 RON projects remain the intended format. Command history, dialog state, and descriptive undo metadata are editor-session state only. Unicode mode accepts printable single-cell glyphs. Wide glyph and grapheme-cluster editing remain outside the current format.
+The `0.2.2` pre-publication safety release requires Rust 1.88 or newer but does not change the project-file schema; existing version-1 RON projects remain the intended format. Command history, dialog state, and descriptive undo metadata are editor-session state only. Unicode mode accepts printable single-cell glyphs. Wide glyph and grapheme-cluster editing remain outside the current format.
 
 Release history is maintained in [CHANGELOG.md](CHANGELOG.md). The repository also includes a [publishing checklist](docs/PUBLISHING.md) and [demo-capture guide](docs/DEMO.md).
 
