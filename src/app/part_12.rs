@@ -60,11 +60,16 @@ impl App {
     }
 
     fn delete_animation_frame(&mut self) {
+        let name = self.project.frame().name.clone();
+        self.set_next_history_action(
+            format!("Restored frame \"{name}\""),
+            format!("Deleted frame \"{name}\""),
+        );
         self.snapshot();
         if self.project.delete_active_frame() {
             self.selection = None;
             self.clamp_cursor();
-            self.mark_dirty("Frame deleted");
+            self.mark_dirty(format!("Deleted frame \"{name}\" · u undo"));
         } else {
             self.discard_snapshot();
             self.status = "The final frame cannot be deleted".to_owned();
@@ -209,5 +214,15 @@ mod frame_management_tests {
             app.project.frame().widget_state,
             crate::model::WidgetState::Focused
         );
+    }
+
+    #[test]
+    fn deleting_and_undoing_names_the_frame() {
+        let mut app = App::new(Project::new("test", 4, 4), None);
+        app.add_animation_frame(Some("Blink"));
+        app.delete_animation_frame();
+        assert!(app.status.contains("Blink"));
+        app.undo();
+        assert!(app.status.contains("Restored frame \"Blink\""));
     }
 }
