@@ -25,3 +25,13 @@ jobs:
         run: cargo clippy --all-targets --all-features
       - name: Tests
         run: cargo test --all-targets --all-features
+      - name: Documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --no-deps --all-features
+      - name: Package
+        run: cargo package
+      - name: Install smoke test
+        run: |
+          cargo install --path . --root "$RUNNER_TEMP/ratatelier-install"
+          "$RUNNER_TEMP/ratatelier-install/bin/ratatelier" --version
